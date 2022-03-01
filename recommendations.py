@@ -838,6 +838,36 @@ def calculateSimilarItems(prefs,n=10,similarity=sim_pearson):
         scores=topMatches(itemPrefs,item,similarity,n=n)
         result[item]=scores
     return result
+
+def calculateSimilarUsers(prefs,n=10,similarity=sim_pearson):
+
+    '''
+        Creates a dictionary of users showing which other users they are most 
+        similar to. 
+
+        Parameters:
+        -- prefs: dictionary containing user-item matrix
+        -- n: number of similar matches for topMatches() to return
+        -- similarity: function to calc similarity (sim_pearson is default)
+        
+        Returns:
+        -- A dictionary with a similarity matrix
+        
+    '''     
+    result={}
+    # Invert the preference matrix to be item-centric
+    
+    c=0
+    for user in prefs:
+      # Status updates for larger datasets
+        c+=1
+        if c%100==0: 
+            print ("%d / %d") % (c,len(prefs))
+            
+        # Find the most similar items to this one
+        scores=topMatches(prefs,user,similarity,n=n)
+        result[user]=scores
+    return result
                 
 
 def main():
@@ -1041,92 +1071,77 @@ def main():
         #                     itemsim[item1][item2] = float(sim_pearson(pref, item1, item2))
         #         print("Similarity matrix based on sim_pearson, len =", len(itemsim), "\n")
         #         print(itemsim)
-        elif file_io == 'Sim' or file_io == 'sim':
-           print()
-           if len(prefs) > 0:
-               ready = False # sub command in progress
-               sub_cmd = input('RD(ead) distance or RP(ead) pearson or WD(rite) distance or WP(rite) pearson? ')
-               try:
-                   if sub_cmd == 'RD' or sub_cmd == 'rd':
-                       # Load the dictionary back from the pickle file.
-                       itemsim = pickle.load(open( "save_itemsim_distance.p", "rb" ))
-                       sim_method = 'sim_distance'
-  
-                   elif sub_cmd == 'RP' or sub_cmd == 'rp':
-                       # Load the dictionary back from the pickle file.
-                       itemsim = pickle.load(open( "save_itemsim_pearson.p", "rb" ))  
-                       sim_method = 'sim_pearson'
-                      
-                   elif sub_cmd == 'WD' or sub_cmd == 'wd':
-                       # transpose the U-I matrix and calc item-item similarities matrix
-                       itemsim = calculateSimilarItems(prefs,similarity=sim_distance)                    
-                       # Dump/save dictionary to a pickle file
-                       pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
-                       sim_method = 'sim_distance'
-                      
-                   elif sub_cmd == 'WP' or sub_cmd == 'wp':
-                       # transpose the U-I matrix and calc item-item similarities matrix
-                       itemsim = calculateSimilarItems(prefs,similarity=sim_pearson)                    
-                       # Dump/save dictionary to a pickle file
-                       pickle.dump(itemsim, open( "save_itemsim_pearson.p", "wb" ))
-                       sim_method = 'sim_pearson'
-                  
-                   else:
-                       print("Sim sub-command %s is invalid, try again" % sub_cmd)
-                       continue
-                  
-                   ready = True # sub command completed successfully
-                  
-               except Exception as ex:
-                   print ('Error!!', ex, '\nNeed to W(rite) a file before you can R(ead) it!'
-                          ' Enter Sim(ilarity matrix) again and choose a Write command')
-                   print()
-              
-
-               if len(itemsim) > 0 and ready == True:
-                   # Only want to print if sub command completed successfully
-                   print ('Similarity matrix based on %s, len = %d'
-                          % (sim_method, len(itemsim)))
-                   print()
-                   ##
-                   ## enter new code here, or call a new function,
-                   ##    to print the sim matrix
-                   ##
-               print()
-              
-           else:
-               print ('Empty dictionary, R(ead) in some data!')
-                  
-        elif file_io == 'LCVSIM' or file_io == 'lcvsim':
+        elif file_io == 'Sim' or file_io == 'sim' or file_io== 'Simu' or file_io=='simu':
             print()
-            if len(prefs) > 0 and itemsim !={}:             
-                print('LOO_CV_SIM Evaluation')
-                if len(prefs) == 7:
-                    prefs_name = 'critics'
+            if len(prefs) > 0: 
+                ready = False # sub command in progress
+                sub_cmd = input('RD(ead) distance or RP(ead) pearson or WD(rite) distance or WP(rite) pearson? ')
+                try:
+                    if sub_cmd == 'RD' or sub_cmd == 'rd':
+                        # Load the dictionary back from the pickle file.
+                        itemsim = pickle.load(open( "save_itemsim_distance.p", "rb" ))
+                        sim_method = 'sim_distance'
+    
+                    elif sub_cmd == 'RP' or sub_cmd == 'rp':
+                        # Load the dictionary back from the pickle file.
+                        itemsim = pickle.load(open( "save_itemsim_pearson.p", "rb" ))  
+                        sim_method = 'sim_pearson'
+                        
+                    elif sub_cmd == 'WD' or sub_cmd == 'wd':
+                        # transpose the U-I matrix and calc item-item similarities matrix
+                        if file_io=='sim' or file_io== 'Sim':
+                            itemsim = calculateSimilarItems(prefs,similarity=sim_distance)                     
+                            # Dump/save dictionary to a pickle file
+                            pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
+                            sim_method = 'sim_distance'
+                        elif file_io=='simu' or file_io== 'Simu':
+                            itemsim = calculateSimilarUsers(prefs,similarity=sim_distance)                     
+                            # Dump/save dictionary to a pickle file
+                            pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
+                            sim_method = 'sim_distance'
+                        
+                    elif sub_cmd == 'WP' or sub_cmd == 'wp':
+                        # transpose the U-I matrix and calc item-item similarities matrix
+                        if file_io=='sim' or file_io== 'Sim':
+                            itemsim = calculateSimilarItems(prefs,similarity=sim_pearson)                     
+                            # Dump/save dictionary to a pickle file
+                            pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
+                            sim_method = 'sim_distance'
+                        elif file_io=='simu' or file_io== 'Simu':
+                            itemsim = calculateSimilarUsers(prefs,similarity=sim_pearson)                     
+                            # Dump/save dictionary to a pickle file
+                            pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
+                            sim_method = 'sim_distance'
+                    
+                    else:
+                        print("Sim sub-command %s is invalid, try again" % sub_cmd)
+                        continue
+                    
+                    ready = True # sub command completed successfully
+                    
+                except Exception as ex:
+                    print ('Error!!', ex, '\nNeed to W(rite) a file before you can R(ead) it!'
+                           ' Enter Sim(ilarity matrix) again and choose a Write command')
+                    print()
+                
+                
 
-                metric = input ('Enter error metric: MSE, MAE, RMSE: ')
-                if metric == 'MSE' or metric == 'MAE' or metric == 'RMSE' or \
-		        metric == 'mse' or metric == 'mae' or metric == 'rmse':
-                    metric = metric.upper()
-                else:
-                    metric = 'MSE'
-                algo = getRecommendedItems ## Item-based recommendation
-                if sim_method == 'sim_pearson': 
-                    sim = sim_pearson
-                    error_total, error_list  = loo_cv_sim(prefs, metric, sim, algo, itemsim)
-                    print('%s for %s: %.5f, len(SE list): %d, using %s' % (metric, prefs_name, error_total, len(error_list), sim) )
+                if len(itemsim) > 0 and ready == True: 
+                    # Only want to print if sub command completed successfully
+                    print ('Similarity matrix based on %s, len = %d' 
+                           % (sim_method, len(itemsim)))
                     print()
-                elif sim_method == 'sim_distance':
-                    sim = sim_distance
-                    error_total, error_list  = loo_cv_sim(prefs, metric, sim, algo, itemsim)
-                    print('%s for %s: %.5f, len(SE list): %d, using %s' % (metric, prefs_name, error_total, len(error_list), sim) )
-                    print()
-                else:
-                    print('Run Sim(ilarity matrix) command to create/load Sim matrix!')
-                if prefs_name == 'critics':
-                    print(error_list)
+                    ##
+                    ## enter new code here, or call a new function, 
+                    ##    to print the sim matrix
+                    ##
+                print()
+                
             else:
-                print ('Empty dictionary, run R(ead) OR Empty Sim Matrix, run Sim!')
+                print ('Empty dictionary, R(ead) in some data!') 
+        
+
+        
         elif file_io == 'I' or file_io == 'i':
             print()
             pref = transformPrefs(prefs)
