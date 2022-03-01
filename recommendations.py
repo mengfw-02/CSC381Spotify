@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 import numpy as np 
 from math import sqrt 
 import copy
+import math
 
 def from_file_to_dict(path, datafile, itemfile):
     ''' Load user-item matrix from specified file 
@@ -188,9 +189,52 @@ def data_stats(prefs, filename):
     max_rating_sparsity = "%.2f" % max_rating_sparsity
     print("User-item Matrix Sparsity: "+ max_rating_sparsity+"%")
     
+    #Calculating average numer of ratings 
+    avg_rating_user = ratings / users
+    
+    
+    #standard deviation
+    std_avg_user = 0
+    total = 0
+    ratings_per_users = []
+    min_ratings = 0
+    max_ratings = 0
+    median_ratings = 0
+    
+    for movies in prefs.values():
+        num_ratings = len(movies)
+        ratings_per_users.append(num_ratings)
+        total += pow(num_ratings - avg_rating_user,2)
+
+    std_avg_user = sqrt(total / users)
+    
+    
+    print("Average number of ratings per users: %d, and std dev of %f  " %(avg_rating_user, std_avg_user))
+   
+    ratings_per_users.sort()
+    
+
+    min_ratings = ratings_per_users[0]
+    max_ratings = ratings_per_users[users-1]
+    
+    if (users % 2 == 1):
+        median_ratings = ratings_per_users[math.floor(users / 2)]
+    else:
+        #round down or up?
+        median_ratings = (ratings_per_users[int(users/2)-1] + ratings_per_users[int(users/2)]) / 2
+    print("Max number of ratings per users: %d" %(max_ratings))
+    print("Min number of ratings per users: %d" %(min_ratings))
+    print("Median number of ratings per users: %f" %(median_ratings))
+    print("\n")
+
+
+
+    
     plt.hist(lst, bins= [1,2, 3,4,5])
     plt.title("histogram") 
     plt.show()
+    
+    #min, max, median of ratings per user
 
     
 
