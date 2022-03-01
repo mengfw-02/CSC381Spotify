@@ -627,7 +627,7 @@ def getRecommendedItems(prefs,itemMatch,user):
     scores={}
     totalSim={}
     # Loop over items rated by this user
-    for (rating, item) in userRatings.items( ):
+    for (item, rating) in userRatings.items( ):
   
       # Loop over items similar to this one
         for (similarity, item2) in itemMatch[item]:
@@ -775,19 +775,20 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix):
                       ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     #print("MSE")
-    print(error, error_list)
+    #print(error, error_list)
     #print("RMSE)
     error_rmse = error/count
     error_rmse = (error) ** .5
-    print(error, error_list)
+    #print(error, error_list)
     #print("MSE")
-    print(error_mae, error_list_mae)
+   # print(error_mae, error_list_mae)
     # if metric == "RMSE":
     #     error = error/count
     #     error = (error) ** .5
     # else:
     #     error = error/count
     return error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae  
+   
 
 def topMatches(prefs,person,similarity=sim_pearson, n=5):
     '''
@@ -1158,13 +1159,13 @@ def main():
                 algo = getRecommendedItems ## Item-based recommendation
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
-                    error_total, error_list  = loo_cv_sim(prefs, sim, algo, itemsim)
-                    print('%s for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
+                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error_total, error_list  = loo_cv_sim(prefs, sim, algo, itemsim)
-                    print('%s for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
+                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 else:
                     print('Run Sim(ilarity matrix) command to create/load Sim matrix!')
@@ -1175,7 +1176,7 @@ def main():
         
         elif file_io == 'I' or file_io == 'i':
             print()
-            pref = transformPrefs(prefs)
+            prefs = transformPrefs(prefs)
             #print (pref)
             #pref.setdefault(movie,{}) # make it a nested dicitonary
             #pref[movie][person]=float(rating)
@@ -1196,7 +1197,7 @@ def main():
             if len(prefs) > 0 and len(itemsim) > 0:                
                 print ('Example:')
                 user_name = 'Toby'
-                pref = transformPrefs(prefs)
+                prefs = transformPrefs(prefs)
                 print ('Item-based CF recs for %s, %s: ' % (user_name, sim_method), 
                         getRecommendedItems(prefs, itemsim, user_name)) 
                 
