@@ -486,6 +486,9 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
     rankings.reverse()
     return rankings
 
+
+    
+
 # Calc User-based CF recommendations for all users
 def get_all_UU_recs(prefs, sim, num_users=10, top_N=5):
     ''' 
@@ -809,7 +812,7 @@ def topMatches(prefs,person,similarity=sim_pearson, n=5):
     scores.reverse()
     return scores[0:n]
 
-def calculateSimilarItems(prefs,n=10,similarity=sim_pearson):
+def calculateSimilarItems(prefs,n=100,similarity=sim_pearson):
  
     '''
         Creates a dictionary of items showing which other items they are most
@@ -839,7 +842,7 @@ def calculateSimilarItems(prefs,n=10,similarity=sim_pearson):
         result[item]=scores
     return result
 
-def calculateSimilarUsers(prefs,n=10,similarity=sim_pearson):
+def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson):
 
     '''
         Creates a dictionary of users showing which other users they are most 
@@ -868,6 +871,46 @@ def calculateSimilarUsers(prefs,n=10,similarity=sim_pearson):
         scores=topMatches(prefs,user,similarity,n=n)
         result[user]=scores
     return result
+
+# MID-TERM PROJECT (NEW function: number 5)
+def getRecommendationsSim(prefs,person,similarity=sim_pearson):
+    '''
+       Similar to getRecommendations() but uses the user-user similarity matrix 
+       created by calculateSimUsers().
+    '''
+    UUmatrix = calculateSimilarUsers(prefs,n=100,similarity=sim_pearson) #user-user sim matrix
+    
+    totals={}
+    simSums={}
+    for other in UUmatrix:
+      # don't compare me to myself
+        if other==person: 
+            continue
+        sim=similarity(UUmatrix,person,other)
+    
+        # ignore scores of zero or lower
+        if sim<=0: continue
+        for item in UUmatrix[other]:
+            
+            # only score movies I haven't seen yet
+            if item not in UUmatrix[person] or UUmatrix[person][item]==0:
+                # Similarity * Score
+                totals.setdefault(item,0)
+                totals[item]+=UUmatrix[other][item]*sim
+                # Sum of similarities
+                simSums.setdefault(item,0)
+                simSums[item]+=sim
+  
+    # Create the normalized list
+    rankings=[(total/simSums[item],item) for item,total in totals.items()]
+  
+    # Return the sorted list
+    rankings.sort()
+    rankings.reverse()
+    return rankings
+
+
+    
                 
 
 def main():
@@ -900,7 +943,7 @@ def main():
         
         if file_io == 'R' or file_io == 'r':
             print()
-            file_dir = 'CSC381Spotify/data/'
+            file_dir = 'data/'
             datafile = 'critics_ratings.data'
             itemfile = 'critics_movies.item'
             print ('Reading "%s" dictionary from file' % datafile)
@@ -967,12 +1010,12 @@ def main():
                 print ('Example:')
                 user_name = 'Toby'
                 print ('User-based CF recs for %s, sim_pearson: ' % (user_name), 
-                       getRecommendations(prefs, user_name)) 
+                       getRecommendationsSim(prefs, user_name)) 
                         # [(3.3477895267131017, 'The Night Listener'), 
                         #  (2.8325499182641614, 'Lady in the Water'), 
                         #  (2.530980703765565, 'Just My Luck')]
                 print ('User-based CF recs for %s, sim_distance: ' % (user_name),
-                       getRecommendations(prefs, user_name, similarity=sim_distance)) 
+                       getRecommendationsSim(prefs, user_name, similarity=sim_distance)) 
                         # [(3.457128694491423, 'The Night Listener'), 
                         #  (2.778584003814924, 'Lady in the Water'), 
                         #  (2.422482042361917, 'Just My Luck')]
