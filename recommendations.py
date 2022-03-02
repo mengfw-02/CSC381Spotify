@@ -1067,7 +1067,7 @@ def main():
         
         elif file_io == 'LCV' or file_io == 'lcv':
             ready = False # sub command in progress
-            threshold = input('threshold(enter a digit)?\n')
+            threshold = float(input('threshold(enter a digit)?\n'))
             print()
             if len(prefs) > 0:             
                 print ('Example:')            
@@ -1215,7 +1215,7 @@ def main():
         
         elif file_io == 'LCVSIM' or file_io == 'lcvsim':
             ready = False # sub command in progress
-            threshold = int(input('threshold(enter a digit)?\n'))
+            threshold = float(input('threshold(enter a digit)?\n'))
             print()
             if len(prefs) > 0 and itemsim !={}:             
                 print('LOO_CV_SIM Evaluation')
