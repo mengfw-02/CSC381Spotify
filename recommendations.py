@@ -17,6 +17,7 @@ import numpy as np
 from math import sqrt 
 import copy
 import pickle ## add this to the list of import statements
+import math
 
 def from_file_to_dict(path, datafile, itemfile):
     ''' Load user-item matrix from specified file 
@@ -544,7 +545,11 @@ def loo_cv(prefs, metric, sim, algo):
     temp_copy = copy.deepcopy(prefs)
     error = 0
     error_list = []
+    error_list_rmse = []
+    error_mae = 0
+    error_list_mae = []
     count = 0
+    total_mae = 0 
     
     for person in prefs:
         movies = prefs[person]
@@ -559,8 +564,12 @@ def loo_cv(prefs, metric, sim, algo):
             predict = 0
             for element in rec:
                 if element[1] == temp:
+                    error_mae = abs(element[0] -orig)
+                    total_mae += error_mae
                     err = (element[0] - orig) ** 2
                     error_list.append(err)
+                    error_list_mae.append(error_mae)
+                    error_list_rmse.append(err)
                     error += err
                     count += 1
                     found = True
@@ -572,7 +581,9 @@ def loo_cv(prefs, metric, sim, algo):
                       ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     error = error/count
-    return error, error_list        
+    error_rmse = (error) ** .5
+    error_mae = (total_mae) / count
+    return error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae    
 
 #Returns a list of prediction for every item and users in prefs
 # def get_estimation(prefs,sim, algo):
@@ -750,6 +761,7 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix):
     error_mae = 0
     error_list_mae = []
     count = 0
+    total_mae = 0
     
     for person in prefs:
         movies = prefs[person]
@@ -763,6 +775,7 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix):
             for element in rec:
                 if element[1] == temp:
                     error_mae = abs(element[0] - orig)
+                    total_mae += error_mae
                     err = (element[0] - orig) ** 2
                     error_list.append(err)
                     error_list_rmse.append(err)
@@ -780,8 +793,9 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix):
     #print("MSE")
     #print(error, error_list)
     #print("RMSE)
-    error_rmse = error/count
+    error = error/count
     error_rmse = (error) ** .5
+    error_mae = (total_mae) / count
     #print(error, error_list)
     #print("MSE")
    # print(error_mae, error_list_mae)
@@ -935,13 +949,13 @@ def main():
         # Start a simple dialog
         file_io = input('R(ead) critics data from file?, \n'
                         'P(rint) the U-I matrix?, \n'
+                        'Sim(ilarity matrix) calc?, \n'
                         'V(alidate) the dictionary?, \n'
                         'S(tats) print? \n'
                         'D(istance) critics data? \n'
                         'PC(earson Correlation) critics data? \n'
                         'U(ser-based CF Recommendations)? \n'
                         'LCV(eave one out cross-validation)? \n'
-                        'Sim(ilarity matrix) calc?, \n'
                         'LCVSIM(eave one out cross-validation)?, \n'
                         'I(tem-based CF Recommendations)?,\n ==> ')
         
@@ -1063,13 +1077,29 @@ def main():
                 print ('Example:')            
                 
                 # Pearson error 
-                error_pear, error_pear_list = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations')
-                print("MSE for critics: ", "%.10f" % (error_pear), "using", sim_pearson)
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations')
+                #print("MSE for critics: ", "%.10f" % (error), "using", sim_pearson)
+                print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
+                print("MSE error list")
+                print(error_list)
+                print("MAE error list")
+                print(error_list_mae)
+                print("RMSE error list")
+                print(error_list_rmse)
                 print("\n")
                 
                 # Euclidean error 
-                error_euc, error_euc_list = loo_cv(prefs, 'MSE', 'euclidean', 'getRecommendations')
-                print("MSE for critics: ", "%.10f" % (error_euc), "using", sim_distance)
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'euclidean', 'getRecommendations')
+                #print("MSE for critics: ", "%.10f" % (error_euc), "using", sim_distance)
+                print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
+                print("MSE error list")
+                print(error_list)
+                print("MAE error list")
+                print(error_list_mae)
+                print("MRSE error list")
+                print(error_list_rmse)
+                print("\n")
+                
                 print("\n")
                 #error, error_list = loo_cv(prefs, metric, sim, algo)
             else:
@@ -1203,13 +1233,29 @@ def main():
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
-                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
+                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error, len(error_list), sim) )
                     print()
+                    print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
+                    print("MSE error list")
+                    print(error_list)
+                    print("MAE error list")
+                    print(error_list_mae)
+                    print("RMSE error list")
+                    print(error_list_rmse)
+                    print("\n")
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
-                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
+                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error, len(error_list), sim) )
                     print()
+                    print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
+                    print("MSE error list")
+                    print(error_list)
+                    print("MAE error list")
+                    print(error_list_mae)
+                    print("RMSE error list")
+                    print(error_list_rmse)
+                    print("\n")
                 else:
                     print('Run Sim(ilarity matrix) command to create/load Sim matrix!')
                 if prefs_name == 'critics':
