@@ -487,9 +487,6 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
     rankings.reverse()
     return rankings
 
-
-    
-
 # Calc User-based CF recommendations for all users
 def get_all_UU_recs(prefs, sim, num_users=10, top_N=5):
     ''' 
@@ -620,7 +617,7 @@ def transformPrefs(prefs):
 # Gets recommendations for a person by using a weighted average
 # of every other similar item's ratings
 
-def getRecommendedItems(prefs,itemMatch,user):
+def getRecommendedItems(prefs,itemMatch,user, threshold=0):
     '''
         Calculates recommendations for a given user 
 
@@ -649,7 +646,7 @@ def getRecommendedItems(prefs,itemMatch,user):
             # Ignore if this user has already rated this item
             if item2 in userRatings: continue
             # ignore scores of zero or lower
-            if similarity<=0: continue            
+            if similarity<=threshold: continue            
             # Weighted sum of rating times similarity
             scores.setdefault(item2,0)
             scores[item2]+=similarity*rating
@@ -666,6 +663,43 @@ def getRecommendedItems(prefs,itemMatch,user):
     rankings.reverse( )
     print(rankings)
     return rankings
+
+def getRecommendationsSim(prefs,person,similarity=sim_pearson, threshold=0):
+    '''
+       Similar to getRecommendations() but uses the user-user similarity matrix 
+       created by calculateSimUsers().
+    '''
+    UUmatrix = calculateSimilarUsers(prefs,n=100,similarity=sim_pearson) #user-user sim matrix
+    
+    totals={}
+    simSums={}
+    for other in UUmatrix:
+      # don't compare me to myself
+        if other==person: 
+            continue
+        sim=similarity(UUmatrix,person,other)
+    
+        # ignore scores of zero or lower
+        if sim<=threshold: continue
+        for item in UUmatrix[other]:
+            
+            # only score movies I haven't seen yet
+            if item not in UUmatrix[person] or UUmatrix[person][item]==0:
+                # Similarity * Score
+                totals.setdefault(item,0)
+                totals[item]+=UUmatrix[other][item]*sim
+                # Sum of similarities
+                simSums.setdefault(item,0)
+                simSums[item]+=sim
+  
+    # Create the normalized list
+    rankings=[(total/simSums[item],item) for item,total in totals.items()]
+  
+    # Return the sorted list
+    rankings.sort()
+    rankings.reverse()
+    return rankings
+
 
 def get_all_II_recs(prefs, itemsim, sim_method, num_users=10, top_N=5):
     ''' 
@@ -739,7 +773,7 @@ def get_all_II_recs(prefs, itemsim, sim_method, num_users=10, top_N=5):
 #     return error, error_list    
 
 
-def loo_cv_sim(prefs, sim, algo, sim_matrix):
+def loo_cv_sim(prefs, sim, algo, sim_matrix, threshold):
     """
     Leave-One_Out Evaluation: evaluates recommender system ACCURACY
      
@@ -769,7 +803,7 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix):
             temp = movie
             orig = temp_copy[person].pop(movie)
             print(algo)
-            rec = algo(temp_copy, sim_matrix, person)
+            rec = algo(temp_copy, sim_matrix, person, threshold=threshold)
             found = False
             predict = 0
             for element in rec:
@@ -830,7 +864,7 @@ def topMatches(prefs,person,similarity=sim_pearson, n=5):
     scores.reverse()
     return scores[0:n]
 
-def calculateSimilarItems(prefs,n=100,similarity=sim_pearson):
+def calculateSimilarItems(prefs,n=10,similarity=sim_pearson):
  
     '''
         Creates a dictionary of items showing which other items they are most
@@ -860,7 +894,7 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson):
         result[item]=scores
     return result
 
-def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson):
+def calculateSimilarUsers(prefs,n=10,similarity=sim_pearson):
 
     '''
         Creates a dictionary of users showing which other users they are most 
@@ -889,46 +923,6 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson):
         scores=topMatches(prefs,user,similarity,n=n)
         result[user]=scores
     return result
-
-# MID-TERM PROJECT (NEW function: number 5)
-def getRecommendationsSim(prefs,person,similarity=sim_pearson):
-    '''
-       Similar to getRecommendations() but uses the user-user similarity matrix 
-       created by calculateSimUsers().
-    '''
-    UUmatrix = calculateSimilarUsers(prefs,n=100,similarity=sim_pearson) #user-user sim matrix
-    
-    totals={}
-    simSums={}
-    for other in UUmatrix:
-      # don't compare me to myself
-        if other==person: 
-            continue
-        sim=similarity(UUmatrix,person,other)
-    
-        # ignore scores of zero or lower
-        if sim<=0: continue
-        for item in UUmatrix[other]:
-            
-            # only score movies I haven't seen yet
-            if item not in UUmatrix[person] or UUmatrix[person][item]==0:
-                # Similarity * Score
-                totals.setdefault(item,0)
-                totals[item]+=UUmatrix[other][item]*sim
-                # Sum of similarities
-                simSums.setdefault(item,0)
-                simSums[item]+=sim
-  
-    # Create the normalized list
-    rankings=[(total/simSums[item],item) for item,total in totals.items()]
-  
-    # Return the sorted list
-    rankings.sort()
-    rankings.reverse()
-    return rankings
-
-
-    
                 
 
 def main():
@@ -1028,12 +1022,12 @@ def main():
                 print ('Example:')
                 user_name = 'Toby'
                 print ('User-based CF recs for %s, sim_pearson: ' % (user_name), 
-                       getRecommendationsSim(prefs, user_name)) 
+                       getRecommendations(prefs, user_name)) 
                         # [(3.3477895267131017, 'The Night Listener'), 
                         #  (2.8325499182641614, 'Lady in the Water'), 
                         #  (2.530980703765565, 'Just My Luck')]
                 print ('User-based CF recs for %s, sim_distance: ' % (user_name),
-                       getRecommendationsSim(prefs, user_name, similarity=sim_distance)) 
+                       getRecommendations(prefs, user_name, similarity=sim_distance)) 
                         # [(3.457128694491423, 'The Night Listener'), 
                         #  (2.778584003814924, 'Lady in the Water'), 
                         #  (2.422482042361917, 'Just My Luck')]
@@ -1072,6 +1066,8 @@ def main():
                 print ('Empty dictionary, R(ead) in some data!')    
         
         elif file_io == 'LCV' or file_io == 'lcv':
+            ready = False # sub command in progress
+            threshold = input('threshold(enter a digit)?\n')
             print()
             if len(prefs) > 0:             
                 print ('Example:')            
@@ -1218,8 +1214,10 @@ def main():
                 print ('Empty dictionary, R(ead) in some data!') 
         
         elif file_io == 'LCVSIM' or file_io == 'lcvsim':
-             print()
-             if len(prefs) > 0 and itemsim !={}:             
+            ready = False # sub command in progress
+            threshold = int(input('threshold(enter a digit)?\n'))
+            print()
+            if len(prefs) > 0 and itemsim !={}:             
                 print('LOO_CV_SIM Evaluation')
                 if len(prefs) == 7:
                     prefs_name = 'critics'
@@ -1229,7 +1227,11 @@ def main():
 #                     metric = metric.upper()
 #                 else:
 #                     metric = 'MSE'
-                algo = getRecommendedItems ## Item-based recommendation
+                algo=getRecommendedItems
+                # if sub_cmd=="ib":
+                #     algo = getRecommendedItems ## Item-based recommendation
+                # elif sub_cmd=="ub":
+                #     algo=getRecommendationsSim
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
@@ -1245,8 +1247,8 @@ def main():
                     print("\n")
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
-                    print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error, len(error_list), sim) )
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim,threshold)
+                    #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                     print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
                     print("MSE error list")
@@ -1260,7 +1262,7 @@ def main():
                     print('Run Sim(ilarity matrix) command to create/load Sim matrix!')
                 if prefs_name == 'critics':
                     print(error_list)
-             else:
+            else:
                  print ('Empty dictionary, run R(ead) OR Empty Sim Matrix, run Sim!')
         
         elif file_io == 'I' or file_io == 'i':
