@@ -1022,7 +1022,11 @@ def main():
                 print ('Example:')
                 user_name = 'Toby'
                 print ('User-based CF recs for %s, sim_pearson: ' % (user_name), 
+<<<<<<< Updated upstream
                        getRecommendations(prefs, user_name)) 
+=======
+                       getRecommendationsSim(prefs, user_name, similarity = sim_pearson)) 
+>>>>>>> Stashed changes
                         # [(3.3477895267131017, 'The Night Listener'), 
                         #  (2.8325499182641614, 'Lady in the Water'), 
                         #  (2.530980703765565, 'Just My Luck')]
