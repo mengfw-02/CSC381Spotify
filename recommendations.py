@@ -510,7 +510,7 @@ def get_all_UU_recs(prefs, sim, num_users=10, top_N=5):
 
 
 # Compute Leave_One_Out evaluation
-def loo_cv(prefs, metric, sim, algo):
+def loo_cv(prefs, metric, sim, algo, threshold):
     """
     Leave_One_Out Evaluation: evaluates recommender system ACCURACY
      
@@ -554,9 +554,9 @@ def loo_cv(prefs, metric, sim, algo):
             temp = movie
             orig = temp_copy[person].pop(movie)
             if sim == 'pearson':
-                rec = getRecommendations(temp_copy, person)
+                rec = getRecommendationsSim(temp_copy, person, threshold=threshold)
             else:
-                rec = getRecommendations(temp_copy, person, similarity=sim_distance)
+                rec = getRecommendationsSim(temp_copy, person, similarity=sim_distance, threshold=threshold)
             found = False
             predict = 0
             for element in rec:
@@ -1067,13 +1067,13 @@ def main():
         
         elif file_io == 'LCV' or file_io == 'lcv':
             ready = False # sub command in progress
-            threshold = input('threshold(enter a digit)?\n')
+            threshold = float(input('threshold(enter a digit)?\n'))
             print()
             if len(prefs) > 0:             
                 print ('Example:')            
                 
                 # Pearson error 
-                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations')
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations', threshold)
                 #print("MSE for critics: ", "%.10f" % (error), "using", sim_pearson)
                 print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
                 print("MSE error list")
@@ -1085,7 +1085,7 @@ def main():
                 print("\n")
                 
                 # Euclidean error 
-                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'euclidean', 'getRecommendations')
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, 'MSE', 'euclidean', 'getRecommendations', threshold)
                 #print("MSE for critics: ", "%.10f" % (error_euc), "using", sim_distance)
                 print ("MSE for crtics: %f, MAE for critics: %f, MRSE for critics: %f" %(error, error_mae, error_rmse))
                 print("MSE error list")
