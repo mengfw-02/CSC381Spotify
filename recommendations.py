@@ -510,7 +510,7 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-def getRecommendationsSim(prefs,person,similarity=sim_pearson, sim_weight = 1, threshold):
+def getRecommendationsSim(prefs,person,similarity=sim_pearson, sim_weight = 1, threshold = 0):
     '''
        Similar to getRecommendations() but uses the user-user similarity matrix 
        created by calculateSimUsers().
@@ -677,7 +677,7 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-def getRecommendedItems(prefs,itemMatch,user, sim_weight = 1, threshold):
+def getRecommendedItems(prefs,itemMatch,user, sim_weight = 1, threshold = 0) :
     '''
         Calculates recommendations for a given user 
         Parameters:
@@ -836,15 +836,15 @@ def main():
             print('Number of users: %d\nList of users:' % len(prefs), 
                   list(prefs.keys()))
         
-         elif file_io == 'RML' or file_io == 'rml':
-            print()
-            file_dir = 'data/' # path from current directory
-            datafile = 'u.data'  # ratings file
-            itemfile = 'u.item'  # movie titles file            
-            print ('Reading "%s" dictionary from file' % datafile)
-            prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
-            print('Number of users: %d\nList of users [0:10]:' 
-                  % len(prefs), list(prefs.keys())[0:10] )  
+        elif file_io == 'RML' or file_io == 'rml':
+           print()
+           file_dir = 'data/' # path from current directory
+           datafile = 'u.data'  # ratings file
+           itemfile = 'u.item'  # movie titles file            
+           print ('Reading "%s" dictionary from file' % datafile)
+           prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
+           print('Number of users: %d\nList of users [0:10]:' 
+                 % len(prefs), list(prefs.keys())[0:10] )  
         
         elif file_io == 'P' or file_io == 'p':
             # print the u-i matrix
@@ -904,7 +904,7 @@ def main():
             if len(prefs) > 0:             
                 print ('Example:')
                 user_name = 'Toby'
-                print("What is your similarity threshold")
+                print("What is your similarity weighting")
                 file_io = input('1 (None)?, \n'
                                 '25 (n/25)?, \n'
                                 '50 (n/50)?,, \n'
@@ -976,7 +976,7 @@ def main():
             if len(prefs) > 0:             
                 print ('Example:')    
                 
-                print("What is your similarity threshold")
+                print("What is your similarity weight")
                 file_io = input('1 (None)?, \n'
                                 '25 (n/25)?, \n'
                                 '50 (n/50)?,, \n'
@@ -995,7 +995,7 @@ def main():
                 else:
                     sim_algo = sim_pearson
                 
-                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, sim_algo, sim_weight)
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, sim_algo, sim_weight, threshold)
                 # Pearson error 
                 error_pear, error_pear_list = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations')
                 print("MSE for critics: ", "%.10f" % (error_pear), "using", sim_pearson)
