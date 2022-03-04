@@ -500,8 +500,7 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
             print ("%d / %d") % (c,len(prefs))
             
         # Find the most similar items to this one
-        sim_weight = int(sim_weight)
-        if sim_weight > 1:
+        if int(sim_weight) > 1:
             scores=topMatches(prefs,user,similarity = similarity,n=n, sim_weight = sim_weight)
         else:
             scores=topMatches(prefs,user,similarity = similarity,n=n, sim_weight = sim_weight)
@@ -610,7 +609,9 @@ def loo_cv(prefs, sim, sim_weight, threshold):
         for movie in movies:
             temp = movie
             orig = temp_copy[person].pop(movie)
-            rec = getRecommendationsSim(prefs, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
+            # print(temp_copy[person])
+            rec = getRecommendationsSim(temp_copy, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
+            # print(rec)
             # if sim == 'pearson':
             #     rec = getRecommendations(temp_copy, person)
             # else:
@@ -739,7 +740,7 @@ def get_all_II_recs(prefs, itemsim, sim_method, num_users=10, top_N=5):
     for person in prefs:
         print ('Item-based CF recs for %s, %s: ' % (person, sim_method), 
                 getRecommendedItems(prefs, itemsim, person)) 
-def loo_cv_sim(prefs, sim, algo, sim_matrix, threshold):
+def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight):
     """
     Leave-One_Out Evaluation: evaluates recommender system ACCURACY
      
@@ -768,7 +769,7 @@ def loo_cv_sim(prefs, sim, algo, sim_matrix, threshold):
         for movie in movies:
             temp = movie
             orig = temp_copy[person].pop(movie)
-            rec = algo(temp_copy, sim_matrix, person, threshold = threshold)
+            rec = getRecommendedItems(temp_copy, sim_matrix, person, sim_weight= sim_weight, threshold = threshold)
             found = False
             predict = 0
             for element in rec:
@@ -974,20 +975,11 @@ def main():
             threshold = float(input('threshold(enter a digit)?\n'))
             print()
             if len(prefs) > 0:             
-                print ('Example:')    
+                    
                 
-                print("What is your similarity weight")
-                file_io = input('1 (None)?, \n'
-                                '25 (n/25)?, \n'
-                                '50 (n/50)?,, \n'
-                                '==> ')
-                sim_weight = 1
-                sim_weight = file_io
-                sim_weight = int(sim_weight)
-                print("What similarity do you want to use")
-                file_io = input('D(istance)?, \n'
-                                'P(earson)?, \n'
-                                '==> ')
+                # print("What is your similarity weight")
+                sim_weight = int(input('similarity weight(enter a digit)?\n'))
+
                 sim = file_io
                 sim_algo = sim_pearson
                 if sim == 'D' or file_io == 'd':
@@ -995,17 +987,7 @@ def main():
                 else:
                     sim_algo = sim_pearson
                 
-                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, sim_algo, sim_weight, threshold)
-                # Pearson error 
-                error_pear, error_pear_list = loo_cv(prefs, 'MSE', 'pearson', 'getRecommendations')
-                print("MSE for critics: ", "%.10f" % (error_pear), "using", sim_pearson)
-                print("\n")
-                
-                # Euclidean error 
-                error_euc, error_euc_list = loo_cv(prefs, 'MSE', 'euclidean', 'getRecommendations')
-                print("MSE for critics: ", "%.10f" % (error_euc), "using", sim_distance)
-                print("\n")
-                #error, error_list = loo_cv(prefs, metric, sim, algo)
+                error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, sim_algo, sim_weight, threshold=threshold)
             else:
                 print ('Empty dictionary, R(ead) in some data!')    
     
@@ -1086,21 +1068,29 @@ def main():
                 print('LOO_CV_SIM Evaluation')
                 if len(prefs) == 7:
                     prefs_name = 'critics'
+                    sim_weight = int(input('similarity weight(enter a digit)?\n'))
+
+                    sim = file_io
+                    sim_algo = sim_pearson
+                    if sim == 'D' or file_io == 'd':
+                        sim_algo = sim_distance
+                    else:
+                        sim_algo = sim_pearson
 #                 metric = input ('Enter error metric: MSE, MAE, RMSE: ')
 #                 if metric == 'MSE' or metric == 'MAE' or metric == 'RMSE' or \
 # 		        metric == 'mse' or metric == 'mae' or metric == 'rmse':
 #                     metric = metric.upper()
 #                 else:
 #                     metric = 'MSE'
-                algo = getRecommendedItems ## Item-based recommendation
+                
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, sim_matrix=itemsim, threshold = threshold, sim_weight = sim_weight)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, algo, itemsim)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, sim_matrix=itemsim, threshold=threshold, sim_weight = sim_weight)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 else:
