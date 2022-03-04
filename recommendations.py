@@ -8,9 +8,9 @@ CSC381 Programmer/Researcher: << Meng Fan Wang >>
 '''
 
 import os
-import matplotlib
-from matplotlib import pyplot as plt 
-import numpy as np 
+#import matplotlib
+#from matplotlib import pyplot as plt 
+#import numpy as np 
 import math
 from math import sqrt 
 import copy
@@ -450,7 +450,7 @@ def transformPrefs(prefs):
     return pref
 
 # Returns a list of similar matches for person in tuples
-def topMatches(prefs,person,similarity=sim_pearson, n=5, sim_weight = 1):
+def topMatches(prefs,person,similarity=sim_pearson, n=100, sim_weight = 1):
     '''
         Returns the best matches for person from the prefs dictionary
  
@@ -495,9 +495,9 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     c=0
     for user in prefs:
       # Status updates for larger datasets
-        c+=1
-        if c%100==0: 
-            print ("%d / %d") % (c,len(prefs))
+        #c+=1
+        #if c%100==0: 
+            #print ("%d / %d") % (c,len(prefs))
             
         # Find the most similar items to this one
         if int(sim_weight) > 1:
@@ -519,17 +519,22 @@ def getRecommendationsSim(prefs,person,similarity=sim_pearson, sim_weight = 1, t
     # # print(UUmatrix)
     totals={}
     simSums={}
+    
+
     for other in prefs:
       # don't compare me to myself
+        sim=0
         if other==person: 
             continue
         # sim=similarity(UUmatrix,person,other, sim_weight = sim_weight)
         for (sims, user) in UUmatrix[person]:
             if user == other:
                 sim = sims
+                
+        
     
         # ignore scores of zero or lower
-        if sim<=threshold: continue
+        if sim <=threshold: continue
         for item in prefs[other]:
             
             # only score movies I haven't seen yet
@@ -630,11 +635,11 @@ def loo_cv(prefs, sim, sim_weight, threshold):
                     count += 1
                     found = True
                     predict = element[0]
-            if found == False:
-                print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            else:
-                print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+            #if found == False:
+                #print("No prediction/recommendation available for User:", person, ", Item:", movie)
+            #else:
+                #print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
+                     # ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     if count != 0:
         error = error/count
@@ -668,9 +673,9 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     c=0
     for item in itemPrefs:
       # Status updates for larger datasets
-        c+=1
-        if c%100==0:
-            print ("%d / %d") % (c,len(itemPrefs))
+        #c+=1
+        #if c%100==0:
+            #print ("%d / %d") % (c,len(itemPrefs))
            
         # Find the most similar items to this one
         scores=topMatches(itemPrefs,item,similarity,n=n, sim_weight = sim_weight)
@@ -784,11 +789,11 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight):
                     count += 1
                     found = True
                     predict = element[0]
-            if found == False:
-                print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            else:
-                print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+            #if found == False:
+                #print("No prediction/recommendation available for User:", person, ", Item:", movie)
+            #else:
+                #print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
+                 #     ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     error = error/count
     error_rmse = (error) ** .5
@@ -988,6 +993,7 @@ def main():
                     sim_algo = sim_pearson
                 
                 error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv(prefs, sim_algo, sim_weight, threshold=threshold)
+                print(error, error_rmse, error_mae)
             else:
                 print ('Empty dictionary, R(ead) in some data!')    
     
@@ -1066,9 +1072,10 @@ def main():
              print()
              if len(prefs) > 0 and itemsim !={}:             
                 print('LOO_CV_SIM Evaluation')
+                sim_weight = int(input('similarity weight(enter a digit)?\n'))
                 if len(prefs) == 7:
                     prefs_name = 'critics'
-                    sim_weight = int(input('similarity weight(enter a digit)?\n'))
+                    
 
                     sim = file_io
                     sim_algo = sim_pearson
@@ -1085,12 +1092,13 @@ def main():
                 
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, sim_matrix=itemsim, threshold = threshold, sim_weight = sim_weight)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, itemsim, threshold, sim_weight)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, sim_matrix=itemsim, threshold=threshold, sim_weight = sim_weight)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, itemsim, threshold, sim_weight)
+                    print(error, error_rmse, error_mae)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 else:
