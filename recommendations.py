@@ -952,6 +952,8 @@ def main():
                         'LCV(eave one out cross-validation)? \n'
                         'LCVSIM(eave one out cross-validation)?, \n'
                         'I(tem-based CF Recommendations)?,\n ==> ')
+
+
         
         if file_io == 'R' or file_io == 'r':
             print()
@@ -962,6 +964,19 @@ def main():
             prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
             print('Number of users: %d\nList of users:' % len(prefs), 
                   list(prefs.keys()))
+
+       
+
+        elif file_io == 'RML' or file_io == 'rml':
+            print()
+            file_dir = 'data/' # path from current directory
+            datafile = 'u.data'  # ratings file
+            itemfile = 'u.item'  # movie titles file            
+            print ('Reading "%s" dictionary from file' % datafile)
+            prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
+            print('Number of users: %d\nList of users [0:10]:' 
+                  % len(prefs), list(prefs.keys())[0:10] )  
+ 
             
         elif file_io == 'P' or file_io == 'p':
             # print the u-i matrix
@@ -1021,21 +1036,17 @@ def main():
             if len(prefs) > 0:             
                 print ('Example:')
                 user_name = 'Toby'
-                print ('User-based CF recs for %s, sim_pearson: ' % (user_name), 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                       getRecommendations(prefs, user_name)) 
-=======
-                       getRecommendationsSim(prefs, user_name, similarity = sim_pearson)) 
->>>>>>> Stashed changes
-=======
-                       getRecommendationsSim(prefs, user_name, similarity = sim_pearson)) 
->>>>>>> Stashed changes
+                
+
+                getRecommendationsSim(prefs, user_name, similarity = sim_pearson)
+                print ('User-based CF recs for %s, sim_pearson: ' % (user_name))
+
                         # [(3.3477895267131017, 'The Night Listener'), 
                         #  (2.8325499182641614, 'Lady in the Water'), 
                         #  (2.530980703765565, 'Just My Luck')]
-                print ('User-based CF recs for %s, sim_distance: ' % (user_name),
-                       getRecommendations(prefs, user_name, similarity=sim_distance)) 
+                
+                getRecommendations(prefs, user_name, similarity=sim_distance) 
+                print ('User-based CF recs for %s, sim_distance: ' % (user_name))
                         # [(3.457128694491423, 'The Night Listener'), 
                         #  (2.778584003814924, 'Lady in the Water'), 
                         #  (2.422482042361917, 'Just My Luck')]
