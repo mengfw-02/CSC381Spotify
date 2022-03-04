@@ -1036,21 +1036,17 @@ def main():
             if len(prefs) > 0:             
                 print ('Example:')
                 user_name = 'Toby'
-                print ('User-based CF recs for %s, sim_pearson: ' % (user_name), 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                       getRecommendations(prefs, user_name)) 
-=======
-                       getRecommendationsSim(prefs, user_name, similarity = sim_pearson)) 
->>>>>>> Stashed changes
-=======
-                       getRecommendationsSim(prefs, user_name, similarity = sim_pearson)) 
->>>>>>> Stashed changes
+                
+
+                getRecommendationsSim(prefs, user_name, similarity = sim_pearson)
+                print ('User-based CF recs for %s, sim_pearson: ' % (user_name))
+
                         # [(3.3477895267131017, 'The Night Listener'), 
                         #  (2.8325499182641614, 'Lady in the Water'), 
                         #  (2.530980703765565, 'Just My Luck')]
-                print ('User-based CF recs for %s, sim_distance: ' % (user_name),
-                       getRecommendations(prefs, user_name, similarity=sim_distance)) 
+                
+                getRecommendations(prefs, user_name, similarity=sim_distance) 
+                print ('User-based CF recs for %s, sim_distance: ' % (user_name))
                         # [(3.457128694491423, 'The Night Listener'), 
                         #  (2.778584003814924, 'Lady in the Water'), 
                         #  (2.422482042361917, 'Just My Luck')]
