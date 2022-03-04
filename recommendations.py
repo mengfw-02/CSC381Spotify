@@ -952,6 +952,8 @@ def main():
                         'LCV(eave one out cross-validation)? \n'
                         'LCVSIM(eave one out cross-validation)?, \n'
                         'I(tem-based CF Recommendations)?,\n ==> ')
+
+
         
         if file_io == 'R' or file_io == 'r':
             print()
@@ -962,6 +964,19 @@ def main():
             prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
             print('Number of users: %d\nList of users:' % len(prefs), 
                   list(prefs.keys()))
+
+       
+
+        elif file_io == 'RML' or file_io == 'rml':
+            print()
+            file_dir = 'data/' # path from current directory
+            datafile = 'u.data'  # ratings file
+            itemfile = 'u.item'  # movie titles file            
+            print ('Reading "%s" dictionary from file' % datafile)
+            prefs = from_file_to_dict(path, file_dir+datafile, file_dir+itemfile)
+            print('Number of users: %d\nList of users [0:10]:' 
+                  % len(prefs), list(prefs.keys())[0:10] )  
+ 
             
         elif file_io == 'P' or file_io == 'p':
             # print the u-i matrix
