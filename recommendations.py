@@ -1073,7 +1073,7 @@ def main():
              if len(prefs) > 0 and itemsim !={}:             
                 print('LOO_CV_SIM Evaluation')
                 sim_weight = int(input('similarity weight(enter a digit)?\n'))
-                if len(prefs) == 7:
+                if len(prefs) == 943:
                     prefs_name = 'critics'
                     
 
