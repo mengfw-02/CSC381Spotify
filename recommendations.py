@@ -684,7 +684,7 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-def getRecommendedItems(prefs,itemMatch,user, sim_weight = 1, threshold = 0) :
+def getRecommendedItems(prefs,user, itemMatch, sim_weight = 1, threshold = 0) :
     '''
         Calculates recommendations for a given user 
         Parameters:
@@ -791,11 +791,11 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                     count += 1
                     found = True
                     predict = element[0]
-            if found == False:
-                print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            else:
-                print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                     ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+#             if found == False:
+#                 print("No prediction/recommendation available for User:", person, ", Item:", movie)
+#             else:
+#                 print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
+#                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     error = error/count
     error_rmse = (error) ** .5
@@ -1098,6 +1098,7 @@ def main():
 #                     metric = metric.upper()
 #                 else:
 #                     metric = 'MSE'
+#                 print(sim_weight)
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
