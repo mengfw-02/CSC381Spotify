@@ -409,6 +409,7 @@ def sim_pearson(prefs,p1,p2, sim_weight = 1):
     if denominator == 0:
         return 0
     if sim_weight > 1:
+#         print(sim_weight)
         return (numerator/denominator)*(count/sim_weight)
     else:
         return (numerator/denominator)
@@ -509,13 +510,13 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-def getRecommendationsSim(prefs,person,similarity=sim_pearson, sim_weight = 1, threshold = 0):
+def getRecommendationsSim(prefs,person,sim_matrix, similarity=sim_pearson, sim_weight = 1, threshold = 0):
     '''
        Similar to getRecommendations() but uses the user-user similarity matrix 
        created by calculateSimUsers().
     '''
     #user-user sim matrix
-    UUmatrix = calculateSimilarUsers(prefs,n=100,similarity=similarity, sim_weight = sim_weight) 
+#     UUmatrix = calculateSimilarUsers(prefs,n=100,similarity=similarity, sim_weight = sim_weight) 
     # # print(UUmatrix)
     totals={}
     simSums={}
@@ -527,7 +528,7 @@ def getRecommendationsSim(prefs,person,similarity=sim_pearson, sim_weight = 1, t
         if other==person: 
             continue
         # sim=similarity(UUmatrix,person,other, sim_weight = sim_weight)
-        for (sims, user) in UUmatrix[person]:
+        for (sims, user) in sim_matrix[person]:
             if user == other:
                 sim = sims
                 
@@ -745,7 +746,7 @@ def get_all_II_recs(prefs, itemsim, sim_method, num_users=10, top_N=5):
     for person in prefs:
         print ('Item-based CF recs for %s, %s: ' % (person, sim_method), 
                 getRecommendedItems(prefs, itemsim, person)) 
-def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight):
+def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
     """
     Leave-One_Out Evaluation: evaluates recommender system ACCURACY
      
@@ -774,7 +775,8 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight):
         for movie in movies:
             temp = movie
             orig = temp_copy[person].pop(movie)
-            rec = getRecommendedItems(temp_copy, sim_matrix, person, sim_weight= sim_weight, threshold = threshold)
+#             rec = getRecommendationsSim(temp_copy, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
+            rec = algo(temp_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
             found = False
             predict = 0
             for element in rec:
@@ -789,11 +791,11 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight):
                     count += 1
                     found = True
                     predict = element[0]
-            #if found == False:
-                #print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            #else:
-                #print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                 #     ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+            if found == False:
+                print("No prediction/recommendation available for User:", person, ", Item:", movie)
+            else:
+                print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
+                     ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     error = error/count
     error_rmse = (error) ** .5
@@ -1073,7 +1075,14 @@ def main():
              if len(prefs) > 0 and itemsim !={}:             
                 print('LOO_CV_SIM Evaluation')
                 sim_weight = int(input('similarity weight(enter a digit)?\n'))
-                if len(prefs) == 943:
+                algo = input('Enter U(ser) or I(tem) algo \n')
+                if algo == 'I' or algo == 'i':
+                    algo = getRecommendedItems
+                elif algo == 'U' or algo == 'u':
+                    algo = getRecommendationsSim
+                else:
+                    print('invalid input')
+                if len(prefs) == 493:
                     prefs_name = 'critics'
                     
 
@@ -1089,22 +1098,21 @@ def main():
 #                     metric = metric.upper()
 #                 else:
 #                     metric = 'MSE'
-                
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, itemsim, threshold, sim_weight)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim, itemsim, threshold, sim_weight)
+                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
                     print(error, error_rmse, error_mae)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 else:
                     print('Run Sim(ilarity matrix) command to create/load Sim matrix!')
-                if prefs_name == 'critics':
-                    print(error_list)
+#                 if prefs_name == 'critics':
+#                     print(error_list)
              else:
                  print ('Empty dictionary, run R(ead) OR Empty Sim Matrix, run Sim!')
         
@@ -1112,8 +1120,8 @@ def main():
             print()
 
             if len(prefs) > 0 and len(itemsim) > 0:                
-                print ('Example:')
-                user_name = 'Toby'
+#                 print ('Example:')
+#                 user_name = 'Toby'
                 print("What is your similarity threshold")
                 file_io = input('1 (None)?, \n'
                                 '25 (n/25)?, \n'
@@ -1122,9 +1130,9 @@ def main():
                 sim_weight = 1
                 sim_weight = file_io
                 sim_weight = int(sim_weight)
-                print(sim_method)
-                print ('Item-based CF recs for %s, %s: ' % (user_name, sim_method), 
-                        getRecommendedItems(prefs, itemsim, user_name, sim_weight = 1)) 
+#                 print(sim_method)
+#                 print ('Item-based CF recs for %s, %s: ' % (user_name, sim_method), 
+#                         getRecommendedItems(prefs, itemsim, user_name, sim_weight = 1)) 
                 
                 ##
                 ## Example:
