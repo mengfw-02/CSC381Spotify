@@ -8,6 +8,7 @@ CSC381 Programmer/Researcher: << Meng Fan Wang >>
 '''
 
 import os
+import time
 #import matplotlib
 #from matplotlib import pyplot as plt 
 #import numpy as np 
@@ -377,7 +378,7 @@ def sim_pearson(prefs,p1,p2, sim_weight):
         
     '''
     
-    pass ## place your code here!
+    ## place your code here!
     ##
     ## REQUIREMENT! For this function, calculate the pearson correlation
     ## "longhand", i.e, calc both numerator and denominator as indicated in the
@@ -495,9 +496,9 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     c=0
     for user in prefs:
       # Status updates for larger datasets
-        #c+=1
-        #if c%100==0: 
-            #print ("%d / %d") % (c,len(prefs))
+        c+=1
+        if c%100==0: 
+            print ("%d / %d") % (c,len(prefs))
             
         # Find the most similar items to this one
         if int(sim_weight) > 1:
@@ -600,52 +601,50 @@ def loo_cv(prefs, sim, sim_weight, threshold):
       
     return mean error, error list
     """
+
+    start_time = time.time()
     temp_copy = copy.deepcopy(prefs)
-    error = 0
+    error_mse = 0
     error_list = []
+    error_rmse=0
     error_list_rmse = []
     error_mae = 0
     error_list_mae = []
-    count = 0
-    total_mae = 0 
+    count = 0 
     
     for person in prefs:
         movies = prefs[person]
         for movie in movies:
             temp = movie
             orig = temp_copy[person].pop(movie)
-            # print(temp_copy[person])
             rec = getRecommendationsSim(temp_copy, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
-            # print(rec)
-            # if sim == 'pearson':
-            #     rec = getRecommendations(temp_copy, person)
-            # else:
-            #     rec = getRecommendations(temp_copy, person, similarity=sim_distance)
+
             found = False
             predict = 0
             for element in rec:
-                if element[1] == temp:
-                    error_mae = abs(element[0] -orig)
-                    total_mae += error_mae
-                    err = (element[0] - orig) ** 2
-                    error_list.append(err)
-                    error_list_mae.append(error_mae)
-                    error_list_rmse.append(err)
-                    error += err
-                    count += 1
-                    found = True
-                    predict = element[0]
-            #if found == False:
-                #print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            #else:
-                #print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                     # ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
-            temp_copy[person][movie]= orig
+                count += 1
+                err = (element[0] - orig) ** 2
+                error_mse += err
+                error_mae = (abs(element[0] - orig))
+                error_rmse += sqrt(err)
+                    
+                error_list.append(err)
+                error_list_rmse.append(err)
+                error_list_mae.append(error_mae)
+            
+                found = True
+                predict = element[0]
+                    
+                if found==True and count%10==0:
+                    print("Number of users processed: ", count )
+                    #print("--- %f seconds --- for %d users " % (time.time() - start_time), count)
+                    print("===> {} secs for {} users, {} time per user: ".format(time.time() - start_time, count, (time.time() - start_time)/count))
+                    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list))/n)
+                temp_copy[person][movie]= orig
+                
     if count != 0:
-        error = error/count
-        error_rmse = (error) ** .5
-        error_mae = (total_mae) / count
-        return error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae  
+        
+        return error_mse/count, error_mae/count, error_rmse/count, len(error_list)  
     else:
         pass
 
@@ -683,7 +682,11 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
+<<<<<<< Updated upstream
 def getRecommendedItems(prefs,user, itemMatch, sim_weight = 1, threshold = 0) :
+=======
+def getRecommendedItems(prefs,user,itemMatch, sim_weight = 1, threshold = 0) :
+>>>>>>> Stashed changes
     '''
         Calculates recommendations for a given user 
         Parameters:
@@ -760,17 +763,20 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
          error_total: MSE, or MAE, or RMSE totals for this set of conditions
 	 error_list: list of actual-predicted differences
     """
+    start_time = time.time()
     temp_copy = copy.deepcopy(prefs)
-    error = 0
+    error_mse = 0
     error_list = []
+    error_rmse=0
     error_list_rmse = []
     error_mae = 0
     error_list_mae = []
     count = 0
-    total_mae = 0
+    c=0
     
     for person in prefs:
         movies = prefs[person]
+        c+=1
         for movie in movies:
             temp = movie
             orig = temp_copy[person].pop(movie)
@@ -778,28 +784,42 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
             rec = algo(temp_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
             found = False
             predict = 0
+            
+
+            
             for element in rec:
                 if element[1] == temp:
-                    error_mae = abs(element[0] - orig)
-                    total_mae += error_mae
+                    count+=1
                     err = (element[0] - orig) ** 2
+                    error_mse += err
+                    error_mae += (abs(element[0] - orig))
+                    error_rmse += sqrt(err)
+                    
                     error_list.append(err)
                     error_list_rmse.append(err)
                     error_list_mae.append(error_mae)
-                    error += err
-                    count += 1
+            
                     found = True
                     predict = element[0]
+<<<<<<< Updated upstream
 #             if found == False:
 #                 print("No prediction/recommendation available for User:", person, ", Item:", movie)
 #             else:
 #                 print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
 #                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+=======
+                    
+        if c%10==0:
+            print("Number of users processed: ", c )
+            
+            print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
+            print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count))
+>>>>>>> Stashed changes
             temp_copy[person][movie]= orig
-    error = error/count
-    error_rmse = (error) ** .5
-    error_mae = (total_mae) / count
-    return error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae  
+                
+    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list)))
+
+    return error_mse/count, error_mae/count, error_rmse/count, len(error_list)  
    
 #Main
 def main():
@@ -1082,7 +1102,7 @@ def main():
                     algo = getRecommendationsSim
                 else:
                     print('invalid input')
-                if len(prefs) == 493:
+                if len(prefs) == 7:
                     prefs_name = 'critics'
                     
 
@@ -1101,13 +1121,13 @@ def main():
 #                 print(sim_weight)
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
+                    error_mse, error_rmse, error_mae, Coverage = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
                     sim = sim_distance
-                    error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
-                    print(error, error_rmse, error_mae)
+                    error_mse, error_rmse, error_mae, Coverage = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
+                   
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 else:
