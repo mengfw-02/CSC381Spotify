@@ -682,11 +682,7 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-<<<<<<< Updated upstream
 def getRecommendedItems(prefs,user, itemMatch, sim_weight = 1, threshold = 0) :
-=======
-def getRecommendedItems(prefs,user,itemMatch, sim_weight = 1, threshold = 0) :
->>>>>>> Stashed changes
     '''
         Calculates recommendations for a given user 
         Parameters:
@@ -801,20 +797,13 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
             
                     found = True
                     predict = element[0]
-<<<<<<< Updated upstream
-#             if found == False:
-#                 print("No prediction/recommendation available for User:", person, ", Item:", movie)
-#             else:
-#                 print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-#                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
-=======
                     
         if c%10==0:
             print("Number of users processed: ", c )
             
             print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
             print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count))
->>>>>>> Stashed changes
+
             temp_copy[person][movie]= orig
                 
     print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list)))
