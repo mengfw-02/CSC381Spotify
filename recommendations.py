@@ -789,7 +789,7 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                     err = (element[0] - orig) ** 2
                     error_mse += err
                     error_mae += (abs(element[0] - orig))
-                    error_rmse += sqrt(err)
+                    error_rmse += err
                     
                     error_list.append(err)
                     error_list_rmse.append(err)
@@ -802,11 +802,11 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
             print("Number of users processed: ", c )
             
             print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
-            print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count))
+            print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
 
             temp_copy[person][movie]= orig
                 
-    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list)))
+    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
 
     return error_mse/count, error_mae/count, error_rmse/count, len(error_list)  
    
