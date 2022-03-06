@@ -364,7 +364,7 @@ def sim_distance(prefs,person1,person2, sim_weight = 1):
         return (1/(1+sqrt(sum_of_squares)))
 
 # Returns the Pearson correlation coefficient for p1 and p2
-def sim_pearson(prefs,p1,p2, sim_weight = 1):
+def sim_pearson(prefs,p1,p2, sim_weight):
     '''
         Calculate Pearson Correlation similarity 
         Parameters:
@@ -389,7 +389,6 @@ def sim_pearson(prefs,p1,p2, sim_weight = 1):
     movies = prefs[p1]
     movies2 = prefs[p2]
     count = 0
-    
     #Calculating pearson similarity
     numerator = 0
     denominator = 0
@@ -684,7 +683,7 @@ def calculateSimilarItems(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     return result
 
 # Create the list of recommendation for person
-def getRecommendedItems(prefs,itemMatch,user, sim_weight = 1, threshold = 0) :
+def getRecommendedItems(prefs,user, itemMatch, sim_weight = 1, threshold = 0) :
     '''
         Calculates recommendations for a given user 
         Parameters:
@@ -791,11 +790,11 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                     count += 1
                     found = True
                     predict = element[0]
-            if found == False:
-                print("No prediction/recommendation available for User:", person, ", Item:", movie)
-            else:
-                print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
-                     ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
+#             if found == False:
+#                 print("No prediction/recommendation available for User:", person, ", Item:", movie)
+#             else:
+#                 print("User:", person, ", Item:", movie, ", Prediction:", "%.10f" %(predict),
+#                      ", Actual:", orig, ", Sq Error:", "%.10f" % (error_list[len(error_list)-1]))
             temp_copy[person][movie]= orig
     error = error/count
     error_rmse = (error) ** .5
@@ -1004,6 +1003,7 @@ def main():
             if len(prefs) > 0: 
                 ready = False # sub command in progress
                 sub_cmd = input('RD(ead) distance or RP(ead) pearson or WD(rite) distance or WP(rite) pearson? ')
+                sim_weight = int(input('similarity weight(enter a digit)?\n'))
                 try:
                     if sub_cmd == 'RD' or sub_cmd == 'rd':
                         # Load the dictionary back from the pickle file.
@@ -1018,12 +1018,12 @@ def main():
                     elif sub_cmd == 'WD' or sub_cmd == 'wd':
                         # transpose the U-I matrix and calc item-item similarities matrix
                         if file_io=='sim' or file_io== 'Sim':
-                            itemsim = calculateSimilarItems(prefs,similarity=sim_distance)                     
+                            itemsim = calculateSimilarItems(prefs,similarity=sim_distance, sim_weight = sim_weight)                     
                             # Dump/save dictionary to a pickle file
                             pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
                             sim_method = 'sim_distance'
                         elif file_io=='simu' or file_io== 'Simu':
-                            itemsim = calculateSimilarUsers(prefs,similarity=sim_distance)                     
+                            itemsim = calculateSimilarUsers(prefs,similarity=sim_distance, sim_weight = sim_weight)                     
                             # Dump/save dictionary to a pickle file
                             pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
                             sim_method = 'sim_distance'
@@ -1031,15 +1031,15 @@ def main():
                     elif sub_cmd == 'WP' or sub_cmd == 'wp':
                         # transpose the U-I matrix and calc item-item similarities matrix
                         if file_io=='sim' or file_io== 'Sim':
-                            itemsim = calculateSimilarItems(prefs,similarity=sim_pearson)                     
+                            itemsim = calculateSimilarItems(prefs,similarity=sim_pearson, sim_weight = sim_weight)                     
                             # Dump/save dictionary to a pickle file
                             pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
-                            sim_method = 'sim_distance'
+                            sim_method = 'sim_pearson'
                         elif file_io=='simu' or file_io== 'Simu':
-                            itemsim = calculateSimilarUsers(prefs,similarity=sim_pearson)                     
+                            itemsim = calculateSimilarUsers(prefs,similarity=sim_pearson, sim_weight = sim_weight)                     
                             # Dump/save dictionary to a pickle file
                             pickle.dump(itemsim, open( "save_itemsim_distance.p", "wb" ))
-                            sim_method = 'sim_distance'
+                            sim_method = 'sim_pearson'
                     
                     else:
                         print("Sim sub-command %s is invalid, try again" % sub_cmd)
@@ -1098,6 +1098,7 @@ def main():
 #                     metric = metric.upper()
 #                 else:
 #                     metric = 'MSE'
+#                 print(sim_weight)
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
