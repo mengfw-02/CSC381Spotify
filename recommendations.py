@@ -1102,6 +1102,7 @@ def main():
                 if sim_method == 'sim_pearson': 
                     sim = sim_pearson
                     error, error_list, error_rmse, error_list_rmse, error_mae, error_list_mae = loo_cv_sim(prefs, sim,itemsim, threshold, sim_weight, algo)
+                    print(error, error_rmse, error_mae)
                     #print('Stats for %s: %.5f, len(SE list): %d, using %s' % (prefs_name, error_total, len(error_list), sim) )
                     print()
                 elif sim_method == 'sim_distance':
