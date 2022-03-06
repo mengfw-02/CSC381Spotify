@@ -359,7 +359,7 @@ def sim_distance(prefs,person1,person2, sim_weight = 1):
 #     print(1/(1+sqrt(sum_of_squares)))
     similarity = 1/(1+sqrt(sum_of_squares))
     # Returns Euclidean distance similarity for RS
-    if sim_weight > 1:
+    if (len(si)) < sim_weight:
         # If we are apply weight then multiply n/sim_weight
 #         print("weighting")
 #         print(similarity*(float(len(si))/sim_weight))
@@ -408,10 +408,10 @@ def sim_pearson(prefs,p1,p2, sim_weight):
             x_diff_sum += (x_diff) ** 2
             y_diff_sum += (y_diff) ** 2
             count += 1
-    denominator = (sqrt(x_diff_sum))*(sqrt(y_diff_sum))
+    denominator = (math.sqrt(x_diff_sum * y_diff_sum))
     if denominator == 0:
         return 0
-    if sim_weight > 1:
+    if count < sim_weight:
 #         print(sim_weight)
         return (numerator/denominator)*(count/sim_weight)
     else:
