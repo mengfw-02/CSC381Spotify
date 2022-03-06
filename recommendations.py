@@ -356,13 +356,16 @@ def sim_distance(prefs,person1,person2, sim_weight = 1):
         rate_2 = prefs[person2][item]
         diff = (rate_1 - rate_2)**2
         sum_of_squares += diff
-    
+#     print(1/(1+sqrt(sum_of_squares)))
+    similarity = 1/(1+sqrt(sum_of_squares))
     # Returns Euclidean distance similarity for RS
     if sim_weight > 1:
         # If we are apply weight then multiply n/sim_weight
-        return (1/(1+sqrt(sum_of_squares)))*((len(si))/sim_weight) 
+#         print("weighting")
+#         print(similarity*(float(len(si))/sim_weight))
+        return (similarity*(float(len(si))/sim_weight))
     else:
-        return (1/(1+sqrt(sum_of_squares)))
+        return similarity
 
 # Returns the Pearson correlation coefficient for p1 and p2
 def sim_pearson(prefs,p1,p2, sim_weight):
@@ -496,9 +499,9 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
     c=0
     for user in prefs:
       # Status updates for larger datasets
-        c+=1
-        if c%100==0: 
-            print ("%d / %d") % (c,len(prefs))
+#         c+=1
+#         if c%100==0: 
+#             print ("%d / %d") % (c,len(prefs))
             
         # Find the most similar items to this one
         if int(sim_weight) > 1:
@@ -533,7 +536,7 @@ def getRecommendationsSim(prefs,person,sim_matrix, similarity=sim_pearson, sim_w
                 sim = sims
                 
         
-    
+#         print(sim)
         # ignore scores of zero or lower
         if sim <=threshold: continue
         for item in prefs[other]:
@@ -781,7 +784,6 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
             found = False
             predict = 0
             
-
             
             for element in rec:
                 if element[1] == temp:
@@ -800,15 +802,20 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                     
         if c%10==0:
             print("Number of users processed: ", c )
-            
-            print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
-            print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
+            if count == 0:
+                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)),3))
+                print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
+            else:
+                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
+                print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
 
             temp_copy[person][movie]= orig
-                
-    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
-
-    return error_mse/count, error_mae/count, error_rmse/count, len(error_list)  
+    if count == 0:
+        print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
+        return error_mse, error_mae, error_rmse, len(error_list)
+    else:
+        print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
+        return error_mse/count, error_mae/count, error_rmse/count, len(error_list)
    
 #Main
 def main():
