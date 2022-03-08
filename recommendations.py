@@ -87,12 +87,20 @@ def data_stats(prefs, filename):
     for person in prefs:
         users += 1
         movies = prefs[person]
-        if(len(movies) > items):
-            items = len(movies)
         for movie in movies:
             ratings += 1
             sum_rating += prefs[person][movie]
             lst.append(prefs[person][movie])
+    
+    #Getting the list of movies
+    movie_lst = []
+    for person in prefs:
+        movies = prefs[person]
+        for movie in movies:
+            if movie not in movie_lst:
+                movie_lst.append(movie)
+    items = len(movie_lst)
+    
     #Printing the number of users/items/ratings
     print("Number of users: "+ str(users))
     print("Number of items: "+ str(items))
@@ -188,10 +196,12 @@ def data_stats(prefs, filename):
     
     #Calculating average numer of ratings 
     avg_rating_user = ratings / users
+    avg_rating_item = ratings / items
     
     
-    #standard deviation
+    #standard deviation - users
     std_avg_user = 0
+    std_avg_item = 0
     total = 0
     ratings_per_users = []
     min_ratings = 0
@@ -206,7 +216,7 @@ def data_stats(prefs, filename):
     std_avg_user = sqrt(total / users)
     
     
-    print("Average number of ratings per users: %d, and std dev of %f  " %(avg_rating_user, std_avg_user))
+    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_user, std_avg_user))
     
     ratings_per_users.sort()
     
@@ -219,6 +229,40 @@ def data_stats(prefs, filename):
     else:
          #round down or up?
          median_ratings = (ratings_per_users[int(users/2)-1] + ratings_per_users[int(users/2)]) / 2
+    print("Max number of ratings per users: %d" %(max_ratings))
+    print("Min number of ratings per users: %d" %(min_ratings))
+    print("Median number of ratings per users: %f" %(median_ratings))
+    print("\n")
+    
+     #standard deviation - items
+    pref = transformPrefs(prefs) 
+    std_avg_item = 0
+    total = 0
+    ratings_per_items = []
+    min_ratings = 0
+    max_ratings = 0
+    median_ratings = 0
+    total = 0
+    for movies in pref.values():
+         num_ratings = len(movies)
+         ratings_per_items.append(num_ratings)
+         total += pow(num_ratings - avg_rating_item,2)
+    
+    std_avg_item = sqrt(total / items)
+    
+    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_item, std_avg_item ))
+    
+    ratings_per_items.sort()
+    
+    
+    min_ratings = ratings_per_items[0]
+    max_ratings = ratings_per_items[items-1]
+    
+    if (users % 2 == 1):
+         median_ratings = ratings_per_items[math.floor(items / 2)]
+    else:
+         #round down or up?
+         median_ratings = (ratings_per_items[int(items/2)-1] + ratings_per_users[int(items/2)]) / 2
     print("Max number of ratings per users: %d" %(max_ratings))
     print("Min number of ratings per users: %d" %(min_ratings))
     print("Median number of ratings per users: %f" %(median_ratings))
