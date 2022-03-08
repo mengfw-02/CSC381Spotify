@@ -14,7 +14,7 @@ import time
 #import numpy as np 
 import math
 from math import sqrt 
-import copy
+import copy as cp
 import pickle ## add this to the list of import statements
 
 def from_file_to_dict(path, datafile, itemfile):
@@ -87,12 +87,20 @@ def data_stats(prefs, filename):
     for person in prefs:
         users += 1
         movies = prefs[person]
-        if(len(movies) > items):
-            items = len(movies)
         for movie in movies:
             ratings += 1
             sum_rating += prefs[person][movie]
             lst.append(prefs[person][movie])
+    
+    #Getting the list of movies
+    movie_lst = []
+    for person in prefs:
+        movies = prefs[person]
+        for movie in movies:
+            if movie not in movie_lst:
+                movie_lst.append(movie)
+    items = len(movie_lst)
+    
     #Printing the number of users/items/ratings
     print("Number of users: "+ str(users))
     print("Number of items: "+ str(items))
@@ -188,10 +196,12 @@ def data_stats(prefs, filename):
     
     #Calculating average numer of ratings 
     avg_rating_user = ratings / users
+    avg_rating_item = ratings / items
     
     
-    #standard deviation
+    #standard deviation - users
     std_avg_user = 0
+    std_avg_item = 0
     total = 0
     ratings_per_users = []
     min_ratings = 0
@@ -206,7 +216,7 @@ def data_stats(prefs, filename):
     std_avg_user = sqrt(total / users)
     
     
-    print("Average number of ratings per users: %d, and std dev of %f  " %(avg_rating_user, std_avg_user))
+    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_user, std_avg_user))
     
     ratings_per_users.sort()
     
@@ -219,6 +229,40 @@ def data_stats(prefs, filename):
     else:
          #round down or up?
          median_ratings = (ratings_per_users[int(users/2)-1] + ratings_per_users[int(users/2)]) / 2
+    print("Max number of ratings per users: %d" %(max_ratings))
+    print("Min number of ratings per users: %d" %(min_ratings))
+    print("Median number of ratings per users: %f" %(median_ratings))
+    print("\n")
+    
+     #standard deviation - items
+    pref = transformPrefs(prefs) 
+    std_avg_item = 0
+    total = 0
+    ratings_per_items = []
+    min_ratings = 0
+    max_ratings = 0
+    median_ratings = 0
+    total = 0
+    for movies in pref.values():
+         num_ratings = len(movies)
+         ratings_per_items.append(num_ratings)
+         total += pow(num_ratings - avg_rating_item,2)
+    
+    std_avg_item = sqrt(total / items)
+    
+    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_item, std_avg_item ))
+    
+    ratings_per_items.sort()
+    
+    
+    min_ratings = ratings_per_items[0]
+    max_ratings = ratings_per_items[items-1]
+    
+    if (users % 2 == 1):
+         median_ratings = ratings_per_items[math.floor(items / 2)]
+    else:
+         #round down or up?
+         median_ratings = (ratings_per_items[int(items/2)-1] + ratings_per_users[int(items/2)]) / 2
     print("Max number of ratings per users: %d" %(max_ratings))
     print("Min number of ratings per users: %d" %(min_ratings))
     print("Median number of ratings per users: %f" %(median_ratings))
@@ -509,7 +553,6 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
         else:
             scores=topMatches(prefs,user,similarity = similarity,n=n, sim_weight = sim_weight)
         result[user]=scores
-
     return result
 
 # Create the list of recommendation for person
@@ -762,54 +805,64 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
          error_total: MSE, or MAE, or RMSE totals for this set of conditions
 	 error_list: list of actual-predicted differences
     """
+    
     start_time = time.time()
-    temp_copy = copy.deepcopy(prefs)
-    error_mse = 0
+    prefs_copy = cp.deepcopy(prefs)
     error_list = []
+    error_total = 0
+    count = 0
+    error_mse = 0
     error_rmse=0
     error_list_rmse = []
     error_mae = 0
     error_list_mae = []
-    count = 0
     c=0
     
-    for person in prefs:
-        movies = prefs[person]
-        c+=1
-        for movie in movies:
-            temp = movie
-            orig = temp_copy[person].pop(movie)
-#             rec = getRecommendationsSim(temp_copy, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
-            rec = algo(temp_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
-            found = False
-            predict = 0
-            
-            
-            for element in rec:
-                if element[1] == temp:
-                    count+=1
-                    err = (element[0] - orig) ** 2
-                    error_mse += err
-                    error_mae += (abs(element[0] - orig))
-                    error_rmse += err
+    
+ 
+    
+    for person, item in prefs.items():
+            c = c+1
+            for movie in item:
+                delete = prefs_copy[person].pop(movie)
+                rec = algo(prefs_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
+    
+             
+                   
+                prefs_copy[person][movie] = delete
+                in_value = False
                     
-                    error_list.append(err)
-                    error_list_rmse.append(err)
-                    error_list_mae.append(error_mae)
-            
-                    found = True
-                    predict = element[0]
-                    
-        if c%10==0:
-            print("Number of users processed: ", c )
-            if count == 0:
-                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)),3))
-                print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
-            else:
-                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
-                print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
-
-            temp_copy[person][movie]= orig
+               
+               
+                for item in rec:
+                    in_value = False
+                    for movie in prefs[person]:
+                        if movie == item[1]:
+                            in_value = True
+                            prediction = item[0]
+                            real_val = prefs[person][movie]
+                            err = pow((prediction - real_val),2)
+                            error_list.append (err)
+                            error_total += err
+                            count += 1
+                            error_mse += err
+                            error_mae += abs(prediction - real_val)
+                            error_rmse += err
+                            error_list_rmse.append(err)
+                            error_list_mae.append(error_mae)
+            if((c+1) % 10 == 0):
+                
+                print("Number of users processed: ", (c+1) )
+                if count == 0:
+                    time_per_user=(time.time() - start_time)/(c+1)
+                    print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round(time_per_user,3)))
+                    print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
+                else:
+                    print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round((time.time() - start_time)/count),3))
+                    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
+                 
+                                                            
+                            
     if count == 0:
         print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
         return error_mse, error_mae, error_rmse, len(error_list)
