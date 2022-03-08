@@ -14,7 +14,7 @@ import time
 #import numpy as np 
 import math
 from math import sqrt 
-import copy
+import copy as cp
 import pickle ## add this to the list of import statements
 
 def from_file_to_dict(path, datafile, itemfile):
@@ -78,6 +78,7 @@ def data_stats(prefs, filename):
         -- None
     '''
     users = 0
+    movies_lst = set()
     items = 0
     ratings = 0
     sum_rating = 0
@@ -85,15 +86,17 @@ def data_stats(prefs, filename):
     
     #Calculating the number of users/items/ratings
     for person in prefs:
+       
         users += 1
-        movies = prefs[person]
-        if(len(movies) > items):
-            items = len(movies)
+        movies = prefs[person]       
+        
         for movie in movies:
+            movies_lst.add(movie)
             ratings += 1
             sum_rating += prefs[person][movie]
             lst.append(prefs[person][movie])
     #Printing the number of users/items/ratings
+    items = len(movies_lst)
     print("Number of users: "+ str(users))
     print("Number of items: "+ str(items))
     print("Number of ratings: "+ str(ratings))
@@ -359,7 +362,7 @@ def sim_distance(prefs,person1,person2, sim_weight = 1):
 #     print(1/(1+sqrt(sum_of_squares)))
     similarity = 1/(1+sqrt(sum_of_squares))
     # Returns Euclidean distance similarity for RS
-    if sim_weight > 1:
+    if sim_weight > 1 and len(si) < sim_weight:
         # If we are apply weight then multiply n/sim_weight
 #         print("weighting")
 #         print(similarity*(float(len(si))/sim_weight))
@@ -388,34 +391,49 @@ def sim_pearson(prefs,p1,p2, sim_weight):
     ## formula. You can use sqrt (from math module), and average from numpy.
     ## Look at the sim_distance() function for ideas.
     ##
-    avg_1 = avg(prefs, p1, p2)
-    avg_2 = avg(prefs, p2, p1)
-    movies = prefs[p1]
-    movies2 = prefs[p2]
+    sum_p1 = 0
     count = 0
-    #Calculating pearson similarity
-    numerator = 0
-    denominator = 0
-    x_diff_sum = 0
-    y_diff_sum = 0
-    for movie in movies:
-        if movie in movies2:
-            rate1 = prefs[p1][movie]
-            rate2 = prefs[p2][movie]
-            x_diff = (rate1 - avg_1)
-            y_diff = (rate2 - avg_2)
-            numerator += (x_diff)*(y_diff)
-            x_diff_sum += (x_diff) ** 2
-            y_diff_sum += (y_diff) ** 2
-            count += 1
-    denominator = (sqrt(x_diff_sum))*(sqrt(y_diff_sum))
-    if denominator == 0:
-        return 0
-    if sim_weight > 1:
-#         print(sim_weight)
-        return (numerator/denominator)*(count/sim_weight)
+    sum_p2 = 0
+    numer = 0
+    denumer_x = 0
+    denumer_y = 0
+    
+    variance = {}
+    
+    
+    for items in prefs[p1]:
+        if items in prefs[p2]: 
+            variance[items] = [prefs[p1][items], prefs[p2][items]]  
+    
+    for items in variance:
+        sum_p1 += variance[items][0]
+        count += 1
+        sum_p2 += variance[items][1]
+    if (count == 0):
+        avg_p1 = 0
+        avg_p2 = 0
     else:
-        return (numerator/denominator)
+        avg_p1 = sum_p1 / count
+        avg_p2 = sum_p2 / count
+        
+    
+    for items in variance.values():
+        numer += (items[0]-avg_p1)* (items[1]-avg_p2)
+        denumer_x += pow((items[0]-avg_p1),2)
+        denumer_y += pow((items[1]-avg_p2),2)
+        
+    deno = sqrt(denumer_x)* sqrt(denumer_y)
+    if deno == 0:
+        return 0
+   ##print(numer)
+    #print(denumer_x)
+    #print(denumer_y)
+    
+    if sim_weight > 1 and count < sim_weight:
+#         print(sim_weight)
+        return (numer/deno)*(count/sim_weight)
+    else:
+        return (numer/deno)
 #Helper function for Pearson correlation
 def avg(prefs, person, person2):
     '''
@@ -523,7 +541,7 @@ def getRecommendationsSim(prefs,person,sim_matrix, similarity=sim_pearson, sim_w
     # # print(UUmatrix)
     totals={}
     simSums={}
-    
+   
 
     for other in prefs:
       # don't compare me to myself
@@ -762,62 +780,70 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
          error_total: MSE, or MAE, or RMSE totals for this set of conditions
 	 error_list: list of actual-predicted differences
     """
+    
     start_time = time.time()
-    temp_copy = copy.deepcopy(prefs)
-    error_mse = 0
+    prefs_copy = cp.deepcopy(prefs)
     error_list = []
+    error_total = 0
+    count = 0
+    error_mse = 0
     error_rmse=0
     error_list_rmse = []
     error_mae = 0
     error_list_mae = []
-    count = 0
     c=0
     
-    for person in prefs:
-        movies = prefs[person]
-        c+=1
-        for movie in movies:
-            temp = movie
-            orig = temp_copy[person].pop(movie)
-#             rec = getRecommendationsSim(temp_copy, person, similarity=sim, sim_weight=sim_weight, threshold = threshold)
-            rec = algo(temp_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
-            found = False
-            predict = 0
-            
-            
-            for element in rec:
-                if element[1] == temp:
-                    count+=1
-                    err = (element[0] - orig) ** 2
-                    error_mse += err
-                    error_mae += (abs(element[0] - orig))
-                    error_rmse += err
+    
+ 
+    
+    for person, item in prefs.items():
+            c = c+1
+            for movie in item:
+                delete = prefs_copy[person].pop(movie)
+                rec = algo(prefs_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
+    
+             
+                   
+                prefs_copy[person][movie] = delete
+                in_value = False
                     
-                    error_list.append(err)
-                    error_list_rmse.append(err)
-                    error_list_mae.append(error_mae)
-            
-                    found = True
-                    predict = element[0]
-                    
-        if c%10==0:
-            print("Number of users processed: ", c )
-            if count == 0:
-                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)),3))
-                print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
-            else:
-                print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c, round((time.time() - start_time)/count),3))
-                print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
-
-            temp_copy[person][movie]= orig
+               
+               
+                for item in rec:
+                    in_value = False
+                    for movie in prefs[person]:
+                        if movie == item[1]:
+                            in_value = True
+                            prediction = item[0]
+                            real_val = prefs[person][movie]
+                            err = pow((prediction - real_val),2)
+                            error_list.append (err)
+                            error_total += err
+                            count += 1
+                            error_mse += err
+                            error_mae += abs(prediction - real_val)
+                            error_rmse += err
+                            error_list_rmse.append(err)
+                            error_list_mae.append(error_mae)
+            if((c+1) % 10 == 0):
+                
+                print("Number of users processed: ", (c+1) )
+                if count == 0:
+                    time_per_user=(time.time() - start_time)/(c+1)
+                    print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round(time_per_user,3)))
+                    print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
+                else:
+                    print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round((time.time() - start_time)/count),3))
+                    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
+                 
+                                                            
+                            
     if count == 0:
         print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
         return error_mse, error_mae, error_rmse, len(error_list)
     else:
         print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
-        return error_mse/count, error_mae/count, error_rmse/count, len(error_list)
-   
-#Main
+        return error_mse/count, error_mae/count, error_rmse/count, len(error_list)#Main
 def main():
     ''' User interface for Python console '''
     
