@@ -88,8 +88,11 @@ def data_stats(prefs, filename):
     for person in prefs:
        
         users += 1
-        movies = prefs[person]       
-        
+
+
+        movies = prefs[person]
+        if(len(movies) > items):
+            items = len(movies)
         for movie in movies:
             movies_lst.add(movie)
             ratings += 1
