@@ -4,7 +4,7 @@ The final code package is a collaborative programming effort between the
 CSC381 student(s) named below, the class instructor (Carlos Seminario), and
 source code from Programming Collective Intelligence, Segaran 2007.
 This code is for academic use/purposes only.
-CSC381 Programmer/Researcher: << Meng Fan Wang >>
+CSC381 Programmer/Researcher: << AnAnh Hoang, Malavika kalani, Mengfan Wang,Mike Remezo >>
 '''
 
 import os
