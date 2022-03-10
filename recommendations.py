@@ -9,9 +9,9 @@ CSC381 Programmer/Researcher: << Meng Fan Wang >>
 
 import os
 import time
-#import matplotlib
-#from matplotlib import pyplot as plt 
-#import numpy as np 
+import matplotlib
+from matplotlib import pyplot as plt 
+import numpy as np 
 import math
 from math import sqrt 
 import copy as cp
@@ -62,14 +62,13 @@ def from_file_to_dict(path, datafile, itemfile):
     #return a dictionary of preferences
     return prefs
 
-def data_stats(prefs, filename):
-    ''' Computes/prints descriptive analytics:
-        -- Total number of users, items, ratings
-        -- Overall average rating, standard dev (all users, all items)
-        -- Average item rating, standard dev (all users)
-        -- Average user rating, standard dev (all items)
-        -- Matrix ratings sparsity
-        -- Ratings distribution histogram (all users, all items)
+def popular_items(prefs, filename):
+    ''' Computes/prints popular items analytics    
+        -- popular items: most rated (sorted by # ratings)
+        -- popular items: highest rated (sorted by avg rating)
+        -- popular items: highest rated items that have at least a 
+                          "threshold" number of ratings
+        
         Parameters:
         -- prefs: dictionary containing user-item matrix
         -- filename: string containing name of file being analyzed
@@ -160,81 +159,98 @@ def data_stats(prefs, filename):
     
     #Calculating the average user ratings and standarad deviation
     usr_lst = []
+
+    dicti_sum ={}
+    dicti_count = {}
+    dicti_avg = {}
     for person in prefs:
         movies = prefs[person]
-        temp_sum = 0
-        temp_count = 0
         for movie in movies:
-            temp_sum += prefs[person][movie]
-            temp_count += 1
-        temp_avg = temp_sum/temp_count
-        usr_lst.append(temp_avg)
+            if movie not in dicti_sum.keys():
+                dicti_sum[movie] = prefs[person][movie]
+            else:
+                dicti_sum[movie] += prefs[person][movie]
+            if movie not in dicti_count.keys():
+                dicti_count[movie] = 1
+            else:
+                dicti_count[movie] += 1
+            dicti_avg[movie] = dicti_sum[movie]/dicti_count[movie]
+                
+    #Calculating the highest ranked movies
+    sorted_avg = sorted(dicti_avg.items(), key = lambda kv: kv[1])
+    dicti_avg = dict(sorted_avg)
+    avg = dicti_avg.keys()
+    avg_item = []
+    for i, e in reversed(list(enumerate(avg))):
+        avg_item.append(e)
     
-    usr_avg_sum = 0
-    for avg in usr_lst:
-        usr_avg_sum += avg
-    usr_rating = usr_avg_sum/users
-    sum_diff = 0
-    std_dev = 0
-    for avg in usr_lst:
-        diff = (avg - usr_rating)**2
-        sum_diff += diff
-    std_dev = (sum_diff/users) ** (1/2)
-    #Printing the average user ratings and standarad deviation
-    usr_rating = "%.2f" % usr_rating
-    std_dev = "%.2f" % std_dev
-    print("Average user rating: " +str(usr_rating)+ " out of 5, and std dev of " +str(std_dev))
+    #Calculating the most ranked movies
+    sorted_count = sorted(dicti_count.items(), key = lambda kv: kv[1])
+    dicti_count = dict(sorted_count)
+    most = dicti_count.keys()
+    most_item = []
+    for i, e in reversed(list(enumerate(most))):
+        most_item.append(e)
     
-    #Calculating the max sparsity
-    max_rating_sparsity = 1 - (ratings/(users*items))
-    max_rating_sparsity *= 100
-    #Printing the max sparsity
-    max_rating_sparsity = "%.2f" % max_rating_sparsity
-    print("User-item Matrix Sparsity: "+ max_rating_sparsity+"%")
+    overall_best = []
+    for movie in avg_item:
+        if dicti_count[movie] >= 20:
+            overall_best.append(movie)
+            
+    print("Popular items -- most rated:")
+    table_data = [
+        ['Title', '#Ratings', 'Avg Rating'],
+        [most_item[0], dicti_count[most_item[0]], "%.2f" % (dicti_avg[most_item[0]])], 
+        [most_item[1], dicti_count[most_item[1]], "%.2f" % (dicti_avg[most_item[1]])],
+        [most_item[2], dicti_count[most_item[2]], "%.2f" % (dicti_avg[most_item[2]])],
+        [most_item[3], dicti_count[most_item[3]], "%.2f" % (dicti_avg[most_item[3]])],
+        [most_item[4], dicti_count[most_item[4]], "%.2f" % (dicti_avg[most_item[4]])]
+    ]
+    for row in table_data:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
-    #Calculating average numer of ratings 
-    avg_rating_user = ratings / users
+    print("\n")        
+    print("Popular items -- highest rated:")
+    table_data1 = [
+        ['Title', 'Avg Rating', '#Ratings'],
+        [avg_item[0], "%.2f" % (dicti_avg[avg_item[0]]), dicti_count[avg_item[0]]], 
+        [avg_item[1], "%.2f" % (dicti_avg[avg_item[1]]), dicti_count[avg_item[1]]],
+        [avg_item[2], "%.2f" % (dicti_avg[avg_item[2]]), dicti_count[avg_item[2]]],
+        [avg_item[3], "%.2f" % (dicti_avg[avg_item[3]]), dicti_count[avg_item[3]]],
+        [avg_item[4], "%.2f" % (dicti_avg[avg_item[4]]), dicti_count[avg_item[4]]]
+    ]
+    for row in table_data1:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
+    print("\n")  
+    print("Overall best rated items (number of ratings >= 20):")
+    table_data2 = [
+        ['Title', 'Avg Rating', '#Ratings'],
+        [overall_best[0], "%.2f" % (dicti_avg[overall_best[0]]), dicti_count[overall_best[0]]], 
+        [overall_best[1], "%.2f" % (dicti_avg[overall_best[1]]), dicti_count[overall_best[1]]],
+        [overall_best[2], "%.2f" % (dicti_avg[overall_best[2]]), dicti_count[overall_best[2]]],
+        [overall_best[3], "%.2f" % (dicti_avg[overall_best[3]]), dicti_count[overall_best[3]]],
+        [overall_best[4], "%.2f" % (dicti_avg[overall_best[4]]), dicti_count[overall_best[4]]],
+        [overall_best[5], "%.2f" % (dicti_avg[overall_best[5]]), dicti_count[overall_best[5]]], 
+        [overall_best[6], "%.2f" % (dicti_avg[overall_best[6]]), dicti_count[overall_best[6]]],
+        [overall_best[7], "%.2f" % (dicti_avg[overall_best[7]]), dicti_count[overall_best[7]]],
+        [overall_best[8], "%.2f" % (dicti_avg[overall_best[8]]), dicti_count[overall_best[8]]],
+        [overall_best[9], "%.2f" % (dicti_avg[overall_best[9]]), dicti_count[overall_best[9]]],
+        [overall_best[10], "%.2f" % (dicti_avg[overall_best[10]]), dicti_count[overall_best[10]]], 
+        [overall_best[11], "%.2f" % (dicti_avg[overall_best[11]]), dicti_count[overall_best[11]]],
+        [overall_best[12], "%.2f" % (dicti_avg[overall_best[12]]), dicti_count[overall_best[12]]],
+        [overall_best[13], "%.2f" % (dicti_avg[overall_best[13]]), dicti_count[overall_best[13]]],
+        [overall_best[14], "%.2f" % (dicti_avg[overall_best[14]]), dicti_count[overall_best[14]]],
+        [overall_best[15], "%.2f" % (dicti_avg[overall_best[15]]), dicti_count[overall_best[15]]], 
+        [overall_best[16], "%.2f" % (dicti_avg[overall_best[16]]), dicti_count[overall_best[16]]],
+        [overall_best[17], "%.2f" % (dicti_avg[overall_best[17]]), dicti_count[overall_best[17]]],
+        [overall_best[18], "%.2f" % (dicti_avg[overall_best[18]]), dicti_count[overall_best[18]]],
+        [overall_best[19], "%.2f" % (dicti_avg[overall_best[19]]), dicti_count[overall_best[19]]]
+    ]
+    for row in table_data2:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
-    #standard deviation
-    std_avg_user = 0
-    total = 0
-    ratings_per_users = []
-    min_ratings = 0
-    max_ratings = 0
-    median_ratings = 0
-    
-    for movies in prefs.values():
-         num_ratings = len(movies)
-         ratings_per_users.append(num_ratings)
-         total += pow(num_ratings - avg_rating_user,2)
-    
-    std_avg_user = sqrt(total / users)
-    
-    
-    print("Average number of ratings per users: %d, and std dev of %f  " %(avg_rating_user, std_avg_user))
-    
-    ratings_per_users.sort()
-    
-    
-    min_ratings = ratings_per_users[0]
-    max_ratings = ratings_per_users[users-1]
-    
-    if (users % 2 == 1):
-         median_ratings = ratings_per_users[math.floor(users / 2)]
-    else:
-         #round down or up?
-         median_ratings = (ratings_per_users[int(users/2)-1] + ratings_per_users[int(users/2)]) / 2
-    print("Max number of ratings per users: %d" %(max_ratings))
-    print("Min number of ratings per users: %d" %(min_ratings))
-    print("Median number of ratings per users: %f" %(median_ratings))
-    print("\n")
-    
-    plt.hist(lst, bins= [1,2, 3,4,5])
-    plt.title("histogram") 
-    plt.show()
 
-    
 
 def popular_items(prefs, filename):
     ''' Computes/prints popular items analytics    
@@ -530,7 +546,6 @@ def calculateSimilarUsers(prefs,n=100,similarity=sim_pearson, sim_weight=1):
         else:
             scores=topMatches(prefs,user,similarity = similarity,n=n, sim_weight = sim_weight)
         result[user]=scores
-
     return result
 
 # Create the list of recommendation for person
@@ -769,33 +784,38 @@ def get_all_II_recs(prefs, itemsim, sim_method, num_users=10, top_N=5):
         print ('Item-based CF recs for %s, %s: ' % (person, sim_method), 
                 getRecommendedItems(prefs, itemsim, person)) 
 def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
-    """
-    Leave-One_Out Evaluation: evaluates recommender system ACCURACY
+        """
+        Leave-One_Out Evaluation: evaluates recommender system ACCURACY
+         
+         Parameters:
+             prefs dataset: critics, etc.
+         metric: MSE, or MAE, or RMSE
+         sim: distance, pearson, etc.
+         algo: user-based recommender, item-based recommender, etc.
+             sim_matrix: pre-computed similarity matrix
+         
+        Returns:
+             error_total: MSE, or MAE, or RMSE totals for this set of conditions
+         error_list: list of actual-predicted differences
+        """
+        
+        start_time = time.time()
+        prefs_copy = cp.deepcopy(prefs)
+        error_list = []
+        error_total = 0
+        count = 0
+        error_mse = 0
+        error_rmse=0
+        error_list_rmse = []
+        error_mae = 0
+        error_list_mae = []
+        c=0
+        
+        
      
-     Parameters:
-         prefs dataset: critics, etc.
-	 metric: MSE, or MAE, or RMSE
-	 sim: distance, pearson, etc.
-	 algo: user-based recommender, item-based recommender, etc.
-         sim_matrix: pre-computed similarity matrix
-	 
-    Returns:
-         error_total: MSE, or MAE, or RMSE totals for this set of conditions
-	 error_list: list of actual-predicted differences
-    """
+
     
-    start_time = time.time()
-    prefs_copy = cp.deepcopy(prefs)
-    error_list = []
-    error_total = 0
-    count = 0
-    error_mse = 0
-    error_rmse=0
-    error_list_rmse = []
-    error_mae = 0
-    error_list_mae = []
-    c=0
-    
+  
     
  
     
@@ -847,6 +867,60 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
     else:
         print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
         return error_mse/count, error_mae/count, error_rmse/count, len(error_list)#Main
+
+        
+        for person, item in prefs.items():
+                c = c+1
+                for movie in item:
+                    delete = prefs_copy[person].pop(movie)
+                    rec = algo(prefs_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
+        
+                 
+                       
+                    prefs_copy[person][movie] = delete
+                    in_value = False
+                        
+                   
+                   
+                    for item in rec:
+                        in_value = False
+                        for movie in prefs[person]:
+                            if movie == item[1]:
+                                in_value = True
+                                prediction = item[0]
+                                real_val = prefs[person][movie]
+                                err = pow((prediction - real_val),2)
+                                error_list.append (err)
+                                error_total += err
+                                count += 1
+                                error_mse += err
+                                error_mae += abs(prediction - real_val)
+                                error_rmse += err
+                                error_list_rmse.append(err)
+                                error_list_mae.append(error_mae)
+                if((c+1) % 10 == 0):
+                    
+                    print("Number of users processed: ", (c+1) )
+                    if count == 0:
+                        time_per_user=(time.time() - start_time)/(c+1)
+                        print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round(time_per_user,3)))
+                        print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
+                    else:
+                        print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round((time.time() - start_time)/count),3))
+                        print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
+                        
+        
+                     
+        pickle.dump(error_list, open( "data_2/sq_error_User_dist_25_0.p", "wb" ))                                                       
+                                
+        if count == 0:
+            print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
+            return error_mse, error_mae, error_rmse, len(error_list)
+        else:
+            print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
+            return error_mse/count, error_mae/count, error_rmse/count, len(error_list)
+       
+#Main
 def main():
     ''' User interface for Python console '''
     
