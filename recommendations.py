@@ -9,9 +9,9 @@ CSC381 Programmer/Researcher: << Meng Fan Wang >>
 
 import os
 import time
-#import matplotlib
-#from matplotlib import pyplot as plt 
-#import numpy as np 
+import matplotlib
+from matplotlib import pyplot as plt 
+import numpy as np 
 import math
 from math import sqrt 
 import copy as cp
@@ -62,14 +62,13 @@ def from_file_to_dict(path, datafile, itemfile):
     #return a dictionary of preferences
     return prefs
 
-def data_stats(prefs, filename):
-    ''' Computes/prints descriptive analytics:
-        -- Total number of users, items, ratings
-        -- Overall average rating, standard dev (all users, all items)
-        -- Average item rating, standard dev (all users)
-        -- Average user rating, standard dev (all items)
-        -- Matrix ratings sparsity
-        -- Ratings distribution histogram (all users, all items)
+def popular_items(prefs, filename):
+    ''' Computes/prints popular items analytics    
+        -- popular items: most rated (sorted by # ratings)
+        -- popular items: highest rated (sorted by avg rating)
+        -- popular items: highest rated items that have at least a 
+                          "threshold" number of ratings
+        
         Parameters:
         -- prefs: dictionary containing user-item matrix
         -- filename: string containing name of file being analyzed
@@ -77,202 +76,97 @@ def data_stats(prefs, filename):
         Returns:
         -- None
     '''
-    users = 0
-    items = 0
-    ratings = 0
-    sum_rating = 0
-    lst = []
-    
-    #Calculating the number of users/items/ratings
-    for person in prefs:
-        users += 1
-        movies = prefs[person]
-        for movie in movies:
-            ratings += 1
-            sum_rating += prefs[person][movie]
-            lst.append(prefs[person][movie])
-    
-    #Getting the list of movies
-    movie_lst = []
+    dicti_sum ={}
+    dicti_count = {}
+    dicti_avg = {}
     for person in prefs:
         movies = prefs[person]
         for movie in movies:
-            if movie not in movie_lst:
-                movie_lst.append(movie)
-    items = len(movie_lst)
+            if movie not in dicti_sum.keys():
+                dicti_sum[movie] = prefs[person][movie]
+            else:
+                dicti_sum[movie] += prefs[person][movie]
+            if movie not in dicti_count.keys():
+                dicti_count[movie] = 1
+            else:
+                dicti_count[movie] += 1
+            dicti_avg[movie] = dicti_sum[movie]/dicti_count[movie]
+                
+    #Calculating the highest ranked movies
+    sorted_avg = sorted(dicti_avg.items(), key = lambda kv: kv[1])
+    dicti_avg = dict(sorted_avg)
+    avg = dicti_avg.keys()
+    avg_item = []
+    for i, e in reversed(list(enumerate(avg))):
+        avg_item.append(e)
     
-    #Printing the number of users/items/ratings
-    print("Number of users: "+ str(users))
-    print("Number of items: "+ str(items))
-    print("Number of ratings: "+ str(ratings))
+    #Calculating the most ranked movies
+    sorted_count = sorted(dicti_count.items(), key = lambda kv: kv[1])
+    dicti_count = dict(sorted_count)
+    most = dicti_count.keys()
+    most_item = []
+    for i, e in reversed(list(enumerate(most))):
+        most_item.append(e)
     
-    #Calculating the overall average ratings and standarad deviation
-    avg_rating = sum_rating/ratings
-    sum_diff = 0
-    for person in prefs:
-        movies = prefs[person]
-        for movie in movies:
-            rate = prefs[person][movie]
-            diff = (rate - avg_rating)**2
-            sum_diff += diff
-    std_dev = (sum_diff/ratings) ** (1/2)
-    avg_rating = "%.2f" % avg_rating
-    std_dev = "%.2f" % std_dev
+    overall_best = []
+    for movie in avg_item:
+        if dicti_count[movie] >= 20:
+            overall_best.append(movie)
+            
+    print("Popular items -- most rated:")
+    table_data = [
+        ['Title', '#Ratings', 'Avg Rating'],
+        [most_item[0], dicti_count[most_item[0]], "%.2f" % (dicti_avg[most_item[0]])], 
+        [most_item[1], dicti_count[most_item[1]], "%.2f" % (dicti_avg[most_item[1]])],
+        [most_item[2], dicti_count[most_item[2]], "%.2f" % (dicti_avg[most_item[2]])],
+        [most_item[3], dicti_count[most_item[3]], "%.2f" % (dicti_avg[most_item[3]])],
+        [most_item[4], dicti_count[most_item[4]], "%.2f" % (dicti_avg[most_item[4]])]
+    ]
+    for row in table_data:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
-    #Printing the overall average ratings and standarad deviation
-    print("Overall average rating: " +str(avg_rating)+ " out of 5, and std dev of " +str(std_dev))
+    print("\n")        
+    print("Popular items -- highest rated:")
+    table_data1 = [
+        ['Title', 'Avg Rating', '#Ratings'],
+        [avg_item[0], "%.2f" % (dicti_avg[avg_item[0]]), dicti_count[avg_item[0]]], 
+        [avg_item[1], "%.2f" % (dicti_avg[avg_item[1]]), dicti_count[avg_item[1]]],
+        [avg_item[2], "%.2f" % (dicti_avg[avg_item[2]]), dicti_count[avg_item[2]]],
+        [avg_item[3], "%.2f" % (dicti_avg[avg_item[3]]), dicti_count[avg_item[3]]],
+        [avg_item[4], "%.2f" % (dicti_avg[avg_item[4]]), dicti_count[avg_item[4]]]
+    ]
+    for row in table_data1:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
-    #Average item ratings and standarad deviation
-    movie_lst = []
-    for person in prefs:
-        movies = prefs[person]
-        for movie in movies:
-            if movie not in movie_lst:
-                movie_lst.append(movie)
+    print("\n")  
+    print("Overall best rated items (number of ratings >= 20):")
+    table_data2 = [
+        ['Title', 'Avg Rating', '#Ratings'],
+        [overall_best[0], "%.2f" % (dicti_avg[overall_best[0]]), dicti_count[overall_best[0]]], 
+        [overall_best[1], "%.2f" % (dicti_avg[overall_best[1]]), dicti_count[overall_best[1]]],
+        [overall_best[2], "%.2f" % (dicti_avg[overall_best[2]]), dicti_count[overall_best[2]]],
+        [overall_best[3], "%.2f" % (dicti_avg[overall_best[3]]), dicti_count[overall_best[3]]],
+        [overall_best[4], "%.2f" % (dicti_avg[overall_best[4]]), dicti_count[overall_best[4]]],
+        [overall_best[5], "%.2f" % (dicti_avg[overall_best[5]]), dicti_count[overall_best[5]]], 
+        [overall_best[6], "%.2f" % (dicti_avg[overall_best[6]]), dicti_count[overall_best[6]]],
+        [overall_best[7], "%.2f" % (dicti_avg[overall_best[7]]), dicti_count[overall_best[7]]],
+        [overall_best[8], "%.2f" % (dicti_avg[overall_best[8]]), dicti_count[overall_best[8]]],
+        [overall_best[9], "%.2f" % (dicti_avg[overall_best[9]]), dicti_count[overall_best[9]]],
+        [overall_best[10], "%.2f" % (dicti_avg[overall_best[10]]), dicti_count[overall_best[10]]], 
+        [overall_best[11], "%.2f" % (dicti_avg[overall_best[11]]), dicti_count[overall_best[11]]],
+        [overall_best[12], "%.2f" % (dicti_avg[overall_best[12]]), dicti_count[overall_best[12]]],
+        [overall_best[13], "%.2f" % (dicti_avg[overall_best[13]]), dicti_count[overall_best[13]]],
+        [overall_best[14], "%.2f" % (dicti_avg[overall_best[14]]), dicti_count[overall_best[14]]],
+        [overall_best[15], "%.2f" % (dicti_avg[overall_best[15]]), dicti_count[overall_best[15]]], 
+        [overall_best[16], "%.2f" % (dicti_avg[overall_best[16]]), dicti_count[overall_best[16]]],
+        [overall_best[17], "%.2f" % (dicti_avg[overall_best[17]]), dicti_count[overall_best[17]]],
+        [overall_best[18], "%.2f" % (dicti_avg[overall_best[18]]), dicti_count[overall_best[18]]],
+        [overall_best[19], "%.2f" % (dicti_avg[overall_best[19]]), dicti_count[overall_best[19]]]
+    ]
+    for row in table_data2:
+        print("{: >20} {: >20} {: >20}".format(*row))
     
-    #Calculating the average item rating per user and storing into a list
-    itm_lst = []
-    for movie in movie_lst:
-        temp_sum = 0
-        temp_count = 0
-        for person in prefs:
-            temp_lst = prefs[person].keys()
-            if movie in temp_lst:
-                temp_sum += prefs[person][movie]
-                temp_count += 1
-        temp_avg = temp_sum/temp_count
-        itm_lst.append(temp_avg)
-    
-    #Calculating the average item ratings and standarad deviation
-    itm_avg_sum = 0
-    for avg in itm_lst:
-        itm_avg_sum += avg
-    itm_rating = itm_avg_sum/items
-    sum_diff = 0
-    std_dev = 0
-    for avg in itm_lst:
-        diff = (avg - itm_rating)**2
-        sum_diff += diff
-    std_dev = (sum_diff/items) ** (1/2)
-    
-    #Printing the average item ratings and standarad deviation
-    itm_rating = "%.2f" % itm_rating
-    std_dev = "%.2f" % std_dev
-    print("Average item rating: " +str(itm_rating)+ " out of 5, and std dev of " +str(std_dev))
-    
-    #Calculating the average user ratings and standarad deviation
-    usr_lst = []
-    for person in prefs:
-        movies = prefs[person]
-        temp_sum = 0
-        temp_count = 0
-        for movie in movies:
-            temp_sum += prefs[person][movie]
-            temp_count += 1
-        temp_avg = temp_sum/temp_count
-        usr_lst.append(temp_avg)
-    
-    usr_avg_sum = 0
-    for avg in usr_lst:
-        usr_avg_sum += avg
-    usr_rating = usr_avg_sum/users
-    sum_diff = 0
-    std_dev = 0
-    for avg in usr_lst:
-        diff = (avg - usr_rating)**2
-        sum_diff += diff
-    std_dev = (sum_diff/users) ** (1/2)
-    #Printing the average user ratings and standarad deviation
-    usr_rating = "%.2f" % usr_rating
-    std_dev = "%.2f" % std_dev
-    print("Average user rating: " +str(usr_rating)+ " out of 5, and std dev of " +str(std_dev))
-    
-    #Calculating the max sparsity
-    max_rating_sparsity = 1 - (ratings/(users*items))
-    max_rating_sparsity *= 100
-    #Printing the max sparsity
-    max_rating_sparsity = "%.2f" % max_rating_sparsity
-    print("User-item Matrix Sparsity: "+ max_rating_sparsity+"%")
-    
-    #Calculating average numer of ratings 
-    avg_rating_user = ratings / users
-    avg_rating_item = ratings / items
-    
-    
-    #standard deviation - users
-    std_avg_user = 0
-    std_avg_item = 0
-    total = 0
-    ratings_per_users = []
-    min_ratings = 0
-    max_ratings = 0
-    median_ratings = 0
-    
-    for movies in prefs.values():
-         num_ratings = len(movies)
-         ratings_per_users.append(num_ratings)
-         total += pow(num_ratings - avg_rating_user,2)
-    
-    std_avg_user = sqrt(total / users)
-    
-    
-    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_user, std_avg_user))
-    
-    ratings_per_users.sort()
-    
-    
-    min_ratings = ratings_per_users[0]
-    max_ratings = ratings_per_users[users-1]
-    
-    if (users % 2 == 1):
-         median_ratings = ratings_per_users[math.floor(users / 2)]
-    else:
-         #round down or up?
-         median_ratings = (ratings_per_users[int(users/2)-1] + ratings_per_users[int(users/2)]) / 2
-    print("Max number of ratings per users: %d" %(max_ratings))
-    print("Min number of ratings per users: %d" %(min_ratings))
-    print("Median number of ratings per users: %f" %(median_ratings))
-    print("\n")
-    
-     #standard deviation - items
-    pref = transformPrefs(prefs) 
-    std_avg_item = 0
-    total = 0
-    ratings_per_items = []
-    min_ratings = 0
-    max_ratings = 0
-    median_ratings = 0
-    total = 0
-    for movies in pref.values():
-         num_ratings = len(movies)
-         ratings_per_items.append(num_ratings)
-         total += pow(num_ratings - avg_rating_item,2)
-    
-    std_avg_item = sqrt(total / items)
-    
-    print("Average number of ratings per users: %f, and std dev of %f  " %(avg_rating_item, std_avg_item ))
-    
-    ratings_per_items.sort()
-    
-    
-    min_ratings = ratings_per_items[0]
-    max_ratings = ratings_per_items[items-1]
-    
-    if (users % 2 == 1):
-         median_ratings = ratings_per_items[math.floor(items / 2)]
-    else:
-         #round down or up?
-         median_ratings = (ratings_per_items[int(items/2)-1] + ratings_per_users[int(items/2)]) / 2
-    print("Max number of ratings per users: %d" %(max_ratings))
-    print("Min number of ratings per users: %d" %(min_ratings))
-    print("Median number of ratings per users: %f" %(median_ratings))
-    print("\n")
-    
-    plt.hist(lst, bins= [1,2, 3,4,5])
-    plt.title("histogram") 
-    plt.show()
 
-    
 
 def popular_items(prefs, filename):
     ''' Computes/prints popular items analytics    
