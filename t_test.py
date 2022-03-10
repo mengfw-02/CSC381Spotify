@@ -13,7 +13,7 @@ Author: Carlos Seminario
 import os
 import pickle
 import numpy as np
-#from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from scipy import stats # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html#scipy.stats.ttest_ind
 '''
 scipy.stats.ttest_ind(a, b, axis=0, equal_var=True, nan_policy='propagate')
@@ -23,19 +23,14 @@ scipy.stats.ttest_ind(a, b, axis=0, equal_var=True, nan_policy='propagate')
  populations have identical variances by default.
 '''
 
-def print_loocv_results(sq_diffs_info):
+def print_loocv_results(error_list):
     ''' Print LOOCV SIM results '''
 
-    error_list = []
-    for user in sq_diffs_info:
-        for item in sq_diffs_info[user]:
-            for data_point in sq_diffs_info[user][item]:
-                #print ('User: %s, Item: %s, Prediction: %.5f, Actual: %.5f, Error: %.5f' %\
-            #      (user, item, data_point[0], data_point[1], data_point[2]))                
-                error_list.append(data_point[2]) # save for MSE calc
+
+
                 
     #print()
-    error = sum(error_list)/len(error_list)          
+    error = sum(tuple(error_list))/len(error_list)          
     print ('MSE =', error)
     
     return(error, error_list)
@@ -50,50 +45,50 @@ def main():
     
     print()
     # Load LOOCV results from file, print
-    print('Results for sim_distance, user, lcv:')
-    sq_diffs_info = pickle.load(open( "save_sq_diffs_info_distance_using_critics_user_lcv.p", "rb" ))
+    print('Results for User_sim_distance_25_0:')
+    sq_diffs_info = pickle.load(open( "data_2/sq_error_USer_dist_25_0.p", "rb" ))
     distance_errors_u_lcv_MSE, distance_errors_u_lcv = print_loocv_results(sq_diffs_info)   
     print()
     # Load LOOCV results from file, print
-    print('Results for sim_pearson, user, lcv:')
-    sq_diffs_info = pickle.load(open( "save_sq_diffs_info_pearson_using_critics_user_lcv.p", "rb" ))
+    print('Results for User_sim_pearson_25_0:')
+    sq_diffs_info = pickle.load(open( "data_2/sq_error_USer_Pearson_25_0.p", "rb" ))
     pearson_errors_u_lcv_MSE, pearson_errors_u_lcv = print_loocv_results(sq_diffs_info) 
     
     print()
-    print ('t-test for User-LCV distance vs pearson',len(distance_errors_u_lcv), len(pearson_errors_u_lcv))
-    print ('Null Hypothesis is that the means (MSE values for User-LCV distance and pearson) are equal')
+    print ('t-test for User-sim distance vs sim pearson',len(distance_errors_u_lcv), len(pearson_errors_u_lcv))
+    print ('Null Hypothesis is that the means (MSE values for User-sim distance vs sim pearson) are equal')
     
     ## Calc with the scipy function
     t_u_lcv, p_u_lcv = stats.ttest_ind(distance_errors_u_lcv,pearson_errors_u_lcv)
     print("t = " + str(t_u_lcv))
     print("p = " + str(p_u_lcv))
     print()
-    print('==>> Unable to reject null hypothesis that the means are equal') # The two-tailed p-value    
-    print('==>> The means may or may not be equal')
+    print('==>> We reject  the null hypothesis that the means are equal because p<0.05') # The two-tailed p-value    
+    print('==>> The means are not be equal')
     
     input('\nContinue? ')
 
     print()
     # Load LOOCV SIM results from file, print
-    print('Results for sim_distance, item, lcvsim:')
-    sq_diffs_info = pickle.load(open( "save_sq_diffs_info_distance_using_sim_matrix_item_lcvsim.p", "rb" ))
+    print('Results for Item_sim_distance_25_0:')
+    sq_diffs_info = pickle.load(open( "data_2/sq_error_item-distance_25_0.p", "rb" ))
     distance_errors_i_lcvsim_MSE, distance_errors_i_lcvsim = print_loocv_results(sq_diffs_info)   
     print()
     # Load LOOCV SIM results from file, print
-    print('Results for sim_pearson, item, lcvsim:')
-    sq_diffs_info = pickle.load(open( "save_sq_diffs_info_pearson_using_sim_matrix_item_lcvsim.p", "rb" ))
+    print('Results for Item_sim_pearson_25_0:')
+    sq_diffs_info = pickle.load(open( "data_2/sq_error_Item_Pearson_25_0.p", "rb" ))
     pearson_errors_i_lcvsim_MSE, pearson_errors_i_lcvsim = print_loocv_results(sq_diffs_info) 
     
     print()
-    print ('t-test for Item-LCVSIM pearson vs distance', len(pearson_errors_i_lcvsim), len(distance_errors_i_lcvsim))
-    print ('Null Hypothesis is that the means (MSE values for Item-LCVSIM pearson and distance) are equal')
+    print ('t-test for Item_sim_distance_25_0 vs sim_pearson_25_0', len(pearson_errors_i_lcvsim), len(distance_errors_i_lcvsim))
+    print ('Null Hypothesis is that the means (MSE values for Item_sim_distance_25_0 vs sim_pearson_25_0) are equal')
     
     ## Calc with the scipy function
     t_i_lcvsim, p_i_lcvsim = stats.ttest_ind(pearson_errors_i_lcvsim, distance_errors_i_lcvsim)
     print("t = " + str(t_i_lcvsim))
     print("p = " + str(p_i_lcvsim))
-    print('==>> Unable to reject null hypothesis that the means are equal') 
-    print('==>> The means may or may not be equal')
+    print('==>> We reject  the null hypothesis that the means are equal because p<0.05') # The two-tailed p-value    
+    print('==>> The means are not be equal')
     
     input('\nContinue? ')
     
@@ -101,29 +96,34 @@ def main():
     print ('Cross t-tests')
     
     print()
-    print ('t-test for Item-LCVSIM distance vs User-LCV distance',len(distance_errors_i_lcvsim), len(distance_errors_u_lcv))
+    print ('t-test for User_sim_distance_25_0 vs Item_sim_distance_25_0',len(distance_errors_i_lcvsim), len(distance_errors_u_lcv))
     print ('Null Hypothesis is that the means (MSE values for Item-LCVSIM distance and User-LCV distance) are equal')
     
     ## Calc with the scipy function
     t_u_lcv_i_lcvsim_distance, p_u_lcv_i_lcvsim_distance = stats.ttest_ind(distance_errors_i_lcvsim, distance_errors_u_lcv)
+
+
     
     print()
-    print('distance_errors_i_lcvsim_MSE, distance_errors_u_lcv_MSE:', distance_errors_i_lcvsim_MSE, distance_errors_u_lcv_MSE)
+    print('User_sim_distance_25_0, Item_sim_distance_25_0:', distance_errors_i_lcvsim_MSE, distance_errors_u_lcv_MSE)
     print("t = " + str(t_u_lcv_i_lcvsim_distance))
-    print("p = " + str(p_u_lcv_i_lcvsim_distance), '==>> Unable to reject null hypothesis that the means are equal')
-    print('==>> The means may or may not be equal')
+    print("p = " + str(p_u_lcv_i_lcvsim_distance))
+    print('==>> We reject  the null hypothesis that the means are equal because p<0.05') # The two-tailed p-value    
+    print('==>> The means are not be equal')
+    
 
     print()
-    print ('t-test for Item-LCVSIM pearson vs User-LCV pearson',len(pearson_errors_i_lcvsim), len(pearson_errors_u_lcv))
-    print ('Null Hypothesis is that the means (MSE values for Item-LCVSIM pearson and User-LCV pearson) are equal')
+    print ('t-test for User_sim_Pearson_25_0 Vs Item_sim_Pearson_25_0',len(pearson_errors_i_lcvsim), len(pearson_errors_u_lcv))
+    print ('Null Hypothesis is that the means (MSE values for for User_sim_Pearson_25_0 Vs Item_sim_Pearson_25_0) are equal')
     
     ## Cross Checking with the scipy function
     t_u_lcv_i_lcvsim_pearson, p_u_lcv_i_lcvsim_pearson = stats.ttest_ind(pearson_errors_i_lcvsim, pearson_errors_u_lcv)
     print()
-    print('pearson_errors_i_lcvsim_MSE, pearson_errors_u_lcv_MSE:', pearson_errors_i_lcvsim_MSE, pearson_errors_u_lcv_MSE)   
+    print('for User_sim_Pearson_25_0 Vs Item_sim_Pearson_25_0:', pearson_errors_i_lcvsim_MSE, pearson_errors_u_lcv_MSE)   
     print("t = " + str(t_u_lcv_i_lcvsim_pearson))
-    print("p = " + str(p_u_lcv_i_lcvsim_pearson), '==>> Reject null hypothesis that the means are equal')
-    print('==>> The means are not equal')
+    print("p = " + str(p_u_lcv_i_lcvsim_pearson))
+    print('==>> We reject  the null hypothesis that the means are equal because p<0.05') # The two-tailed p-value    
+    print('==>> The means are not be equal')
     
 
 

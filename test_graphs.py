@@ -32,6 +32,45 @@ def graphs(y1,y2,y3,y4,y5,y6):
     plt.savefig("graphs/Item_based_MAE")
     
     plt.show()
+
+def charts():
+
+    labels = ['UD', 'UP', 'ID', 'IP']
+    men_means = [20, 34, 30, 35, 27]
+    y1=[49659,87497,24176,57540]
+    y2=[33774,87459,16093,57236]
+    y3=[8780,77701,21945,55508]
+    y4=[90645,98124,24716,97504]
+    y5=[158,96646,226,85665]
+    y6=[0,64202,0,69868]	
+    y7=[94708,98779,97029,97015]
+    y8=[98,87781,0,87305]
+    y9=[0,37949,0,36300]
+
+
+
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.15  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, y1, width )
+    rects2 = ax.bar(x + width/2, y2, width)
+    rects3 = ax.bar(x - width/2, y3, width )
+    rects4 = ax.bar(x + width/2, y2, width)
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Scores')
+    ax.set_title('Scores by group and gender')
+    ax.set_xticks(x, labels)
+    ax.legend()
+
+    ax.bar_label(rects1, padding=3)
+    ax.bar_label(rects2, padding=3)
+
+    fig.tight_layout()
+
+    plt.show()
     
 
 def main():
@@ -60,7 +99,7 @@ def main():
     # y5=[0.4121893461, 0.0506329114, 0.0204081633] #Curve5: Distance, 0.3sim
     # y6=[0,0,0] #Curve6: Distance, 0.5sim
 
-    # #Item Based MSE
+    #Item Based MSE
     # y1= [1.055315854,0.6909226879,0.6765823546] #curve1: Pearson, >0 sim
     # y2=[1.041860603,0.7727069532,0.7536180275] #Curve2: Pearson, 0.3 sim
     # y3=[1.027870342,0.7936596326,0.846440929] #Curve3: Pearson, 0.5 sim
