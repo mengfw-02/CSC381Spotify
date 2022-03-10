@@ -810,6 +810,8 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                 print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
 
             temp_copy[person][movie]= orig
+    
+
     if count == 0:
         print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
         return error_mse, error_mae, error_rmse, len(error_list)
