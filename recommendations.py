@@ -3,8 +3,7 @@ CSC381: Building a simple Recommender System
 The final code package is a collaborative programming effort between the
 CSC381 student(s) named below, the class instructor (Carlos Seminario), and
 source code from Programming Collective Intelligence, Segaran 2007.
-This code is for academic use/purposes only.
-CSC381 Programmer/Researcher: << AnAnh Hoang, Malavika kalani, Mengfan Wang,Mike Remezo >>
+CSC381 Programmer/Researcher: <<Anh Hoang, Mengfan Wang, Mike Remezo, Malavika, Kalani>>
 '''
 
 import os
@@ -642,7 +641,7 @@ def loo_cv(prefs, sim, sim_weight, threshold):
     """
 
     start_time = time.time()
-    temp_copy = copy.deepcopy(prefs)
+    temp_copy = cp.deepcopy(prefs)
     error_mse = 0
     error_list = []
     error_rmse=0
@@ -678,7 +677,7 @@ def loo_cv(prefs, sim, sim_weight, threshold):
                     print("Number of users processed: ", count )
                     #print("--- %f seconds --- for %d users " % (time.time() - start_time), count)
                     print("===> {} secs for {} users, {} time per user: ".format(time.time() - start_time, count, (time.time() - start_time)/count))
-                    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list))/n)
+                    print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (error_rmse/count), ", Coverage:", "%.10f" % (len(error_list))/count)
                 temp_copy[person][movie]= orig
                 
     if count != 0:
@@ -811,15 +810,10 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
         error_list_mae = []
         c=0
         
-        
-     
-
-    
-  
     
  
     
-    for person, item in prefs.items():
+        for person, item in prefs.items():
             c = c+1
             for movie in item:
                 delete = prefs_copy[person].pop(movie)
@@ -861,65 +855,16 @@ def loo_cv_sim(prefs, sim, sim_matrix, threshold, sim_weight, algo):
                  
                                                             
                             
-    if count == 0:
-        print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
-        return error_mse, error_mae, error_rmse, len(error_list)
-    else:
-        print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
-        return error_mse/count, error_mae/count, error_rmse/count, len(error_list)#Main
-
-        
-        for person, item in prefs.items():
-                c = c+1
-                for movie in item:
-                    delete = prefs_copy[person].pop(movie)
-                    rec = algo(prefs_copy, person, sim_matrix, sim_weight= sim_weight, threshold = threshold)
-        
-                 
-                       
-                    prefs_copy[person][movie] = delete
-                    in_value = False
-                        
-                   
-                   
-                    for item in rec:
-                        in_value = False
-                        for movie in prefs[person]:
-                            if movie == item[1]:
-                                in_value = True
-                                prediction = item[0]
-                                real_val = prefs[person][movie]
-                                err = pow((prediction - real_val),2)
-                                error_list.append (err)
-                                error_total += err
-                                count += 1
-                                error_mse += err
-                                error_mae += abs(prediction - real_val)
-                                error_rmse += err
-                                error_list_rmse.append(err)
-                                error_list_mae.append(error_mae)
-                if((c+1) % 10 == 0):
-                    
-                    print("Number of users processed: ", (c+1) )
-                    if count == 0:
-                        time_per_user=(time.time() - start_time)/(c+1)
-                        print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round(time_per_user,3)))
-                        print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)))
-                    else:
-                        print("===> {} secs for {} users, {} time per user: ".format(round(time.time() - start_time,2), c+1, round((time.time() - start_time)/count),3))
-                        print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)))
-                        
-        
-                     
-        pickle.dump(error_list, open( "data_2/sq_error_User_dist_25_0.p", "wb" ))                                                       
-                                
         if count == 0:
             print("MSE:", "%.10f" %(error_mse),  ", MAE:", "%.10f" % (error_mae),  ", RMSE:", "%.10f" % (sqrt(error_rmse)), ", Coverage:", "%.10f" % (len(error_list)))
             return error_mse, error_mae, error_rmse, len(error_list)
         else:
             print("MSE:", "%.10f" %(error_mse/count),  ", MAE:", "%.10f" % (error_mae/count),  ", RMSE:", "%.10f" % (sqrt(error_rmse/count)), ", Coverage:", "%.10f" % (len(error_list)))
-            return error_mse/count, error_mae/count, error_rmse/count, len(error_list)
-       
+            return error_mse/count, error_mae/count, error_rmse/count, len(error_list)#Main
+        
+                     
+                                
+        
 #Main
 def main():
     ''' User interface for Python console '''
